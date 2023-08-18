@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 
   // Set a cookie
   res.cookie('user', userData, { maxAge: 5000, httpOnly: true });
-  res.json({ message: 'Logged in successfully' });
+  res.json({ message: 'Server is Running' });
 });
 
 app.get('/test-cookie', (req, res) => {

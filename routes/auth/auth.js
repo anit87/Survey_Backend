@@ -10,10 +10,6 @@ const userSchema = require("../../models/auth/users")
 const userRoleSchema = require("../../models/auth/userByRole")
 const fielduserRoleSchema = require("../../models/auth/fieldUserByRole")
 
-
-
-
-
 const verifyToken = (token, secret) => {
     try {
         const decoded = jwt.verify(token, secret);

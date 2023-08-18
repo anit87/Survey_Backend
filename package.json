@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "Backend server for Survey Web App",
   "main": "index.js",
+  "engines": {
+    "node": ">16"
+  },
   "scripts": {
+    "start": "node index.js",
     "server": "nodemon index.js"
   },
   "author": "",
