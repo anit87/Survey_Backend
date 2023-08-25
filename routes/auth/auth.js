@@ -27,9 +27,6 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
         const { displayName, email, password, userRole } = req.body
 
         let user = await userRoleSchema.findOne({ email }).select('-password')
-        if (!user) {
-            user = await fielduserRoleSchema.findOne({ email }).select('-password')
-        }
 
         if (user) {
             res.json({
@@ -41,32 +38,23 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
         }
         const saltRounds = 10;
         const hash = await bcrypt.hash(password, saltRounds)
-        if (req.user.userRole==='fielduser') {
+        if (req.user.userRole === 'fielduser') {
+            res.json({ status: false, msg: "You are not authorized" })
+        }
+        if (req.user.userRole === userRole) {
             res.json({ status: false, msg: "You are not authorized" })
         }
 
-        if (req.user.userRole === 'admin') {
-            const newUser = new userRoleSchema({
-                adminId: req.user.id,
-                displayName,
-                email,
-                userRole,
-                password: hash,
-            })
-            const data = await newUser.save()
-            res.status(201).json({ status: true, msg: "User Created Successfully" })
-        }
-        if (req.user.userRole === 'user') {
-            const newUser = new fielduserRoleSchema({
-                userId: req.user.id,
-                displayName,
-                email,
-                userRole,
-                password: hash,
-            })
-            const data = await newUser.save()
-            res.status(201).json({ status: true, msg: "User Created Successfully" })
-        }
+
+        const newUser = new userRoleSchema({
+            creatorId: req.user.id,
+            displayName,
+            email,
+            userRole,
+            password: hash,
+        })
+        const data = await newUser.save()
+        res.status(201).json({ status: true, msg: "User Created Successfully" })
 
     } catch (error) {
         console.log(error);
@@ -80,10 +68,7 @@ router.post("/signin", async (req, res) => {
         let user = await userSchema.findOne({ email })
 
         if (!user) {
-            user = await userRoleSchema.findOne({ email })           
-        }
-        if (!user) {
-            user = await fielduserRoleSchema.findOne({ email })       
+            user = await userRoleSchema.findOne({ email })
         }
         console.log("user sign in ", user);
 
@@ -102,11 +87,12 @@ router.post("/signin", async (req, res) => {
                 msg: 'Invalid email or password'
             });
             return
-        } else if (result) {      
+        } else if (result) {
             const token = await jwt.sign({
                 id: user._id.toString(),
                 email: user.email,
-                userRole: user.userRole
+                userRole: user.userRole,
+                displayName: user.displayName
             }, process.env.JWT_SECRET_KEY)
 
             res.cookie('token', token, { maxAge: 3600000, httpOnly: true });

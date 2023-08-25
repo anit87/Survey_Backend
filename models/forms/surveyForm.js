@@ -3,7 +3,10 @@ const { Schema } = mongoose;
 const ageGroupOfMembers = new Schema({
     name: String,
     age: Number,
-    gender: String
+    gender: String,
+    assembly: String,
+    voterId: String,
+
 });
 const assemblyConstituencyMembers = new Schema({
     name: String,
@@ -13,6 +16,11 @@ const assemblyConstituencyMembers = new Schema({
 });
 
 const surveyFormSchema = new Schema({
+    filledBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User' ||'UserRole' || 'FieldUserRole',
+        required: true
+    },
     respondentName: {
         type: String,
         required: true,
@@ -33,6 +41,10 @@ const surveyFormSchema = new Schema({
         type: Number,
         required: true,
     },
+    isOwnProperty: {
+        type: Number,
+        required: true,
+    },
     totalMembers: {
         type: Number,
         required: true,
@@ -41,7 +53,11 @@ const surveyFormSchema = new Schema({
         type: Number,
         required: true,
     },
-    religionAndCaste: {
+    religion: {
+        type: String,
+        required: true,
+    },
+    caste: {
         type: String,
         required: true,
     },
@@ -50,6 +66,10 @@ const surveyFormSchema = new Schema({
         required: true,
     },
     respondentEducation: {
+        type: Number,
+        required: true,
+    },
+    birthdayDate: {
         type: Number,
         required: true,
     },
@@ -66,12 +86,10 @@ const surveyFormSchema = new Schema({
         required: true,
     },
     assemblyConstituencyMembers: {
-        type: [assemblyConstituencyMembers],
-        required: true,
+        type: [assemblyConstituencyMembers]
     },
     voterIDsList: {
-        type: [assemblyConstituencyMembers],
-        required: true,
+        type: [assemblyConstituencyMembers]
     },
     maritalStatus: {
         type: Number,

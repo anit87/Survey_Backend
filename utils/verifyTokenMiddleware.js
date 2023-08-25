@@ -12,7 +12,7 @@ const verifyTokenMiddleware = (req, res, next) => {
 
     try {
         const decodedToken = jwt.verify(token, secretKey);
-        req.user = decodedToken; // Attach the decoded token to the request object
+        req.user = decodedToken;
         next();
     } catch (error) {
         return res.status(403).json({ message: 'Failed to authenticate token' });

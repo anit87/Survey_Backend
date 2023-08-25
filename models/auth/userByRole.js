@@ -2,7 +2,7 @@ const mongoose = require("mongoose")
 const { Schema } = mongoose;
 
 const userByRoleSchema = new Schema({
-    adminId: {
+    creatorId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
