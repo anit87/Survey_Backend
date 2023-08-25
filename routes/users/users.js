@@ -105,6 +105,16 @@ router.post("/records", verifyTokenMiddleware, async (req, res) => {
   }
 
 })
+router.post("/record", async (req, res) => {
+  console.log("1 ", req.body);
+  try {
+    const data = await surveyFormSchema.findById(req.body.id)
+    res.json({ data })
+  } catch (error) {
+    res.status(500).send("error")
+  }
+
+})
 
 
 
