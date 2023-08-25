@@ -95,7 +95,8 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
   }
 })
 
-router.get("/records", verifyTokenMiddleware, async (req, res) => {
+router.post("/records", verifyTokenMiddleware, async (req, res) => {
+  console.log("1 ", req.body);
   try {
     const data = await getTotalForms(req.body.id)
     res.json({ data })
