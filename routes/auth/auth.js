@@ -8,7 +8,6 @@ const verifyTokenMiddleware = require("../../utils/verifyTokenMiddleware")
 const { sendEmail, generateRandomCode } = require("../../utils/sendMail")
 const userSchema = require("../../models/auth/users")
 const userRoleSchema = require("../../models/auth/userByRole")
-const fielduserRoleSchema = require("../../models/auth/fieldUserByRole")
 
 const verifyToken = (token, secret) => {
     try {
@@ -23,8 +22,9 @@ const verifyToken = (token, secret) => {
 // Sign up with email and password
 router.post("/signup", verifyTokenMiddleware, async (req, res) => {
     try {
-        // console.log("create --- ", req.body, " ----token---- ", req.headers.authorization, " -- ", req.user);
-        const { displayName, email, password, userRole } = req.body
+        console.log("create --- ", req.body);
+        const { displayName, password, userRole, phoneNumber } = req.body
+        const email = req.body.email.toLowerCase()
 
         let user = await userRoleSchema.findOne({ email }).select('-password')
 
@@ -38,23 +38,38 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
         }
         const saltRounds = 10;
         const hash = await bcrypt.hash(password, saltRounds)
-        if (req.user.userRole === 'fielduser') {
-            res.json({ status: false, msg: "You are not authorized" })
-        }
-        if (req.user.userRole === userRole) {
+
+
+        if (req.user.userRole === '3') {
             res.json({ status: false, msg: "You are not authorized" })
         }
 
+        if (req.user.userRole === "admin") {
+            const newUser = new userRoleSchema({
+                creatorId: req.user.id,
+                reportingAgent: req.body.reportingAgent || req.user.id,
+                displayName,
+                email,
+                userRole,
+                password: hash,
+                phoneNumber
+            })
+            const data = await newUser.save()
+            res.status(201).json({ status: true, msg: "User Created Successfully" })
 
-        const newUser = new userRoleSchema({
-            creatorId: req.user.id,
-            displayName,
-            email,
-            userRole,
-            password: hash,
-        })
-        const data = await newUser.save()
-        res.status(201).json({ status: true, msg: "User Created Successfully" })
+        } else {
+            const newUser = new userRoleSchema({
+                creatorId: req.user.id,
+                reportingAgent: userRole == "3" ? req.user.id : null,
+                displayName,
+                email,
+                userRole,
+                password: hash,
+                phoneNumber
+            })
+            const data = await newUser.save()
+            res.status(201).json({ status: true, msg: "User Created Successfully" })
+        }
 
     } catch (error) {
         console.log(error);
@@ -64,7 +79,9 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
 
 router.post("/signin", async (req, res) => {
     try {
-        const { email, password } = req.body
+        const { password } = req.body
+        const email = req.body.email.toLowerCase()
+
         let user = await userSchema.findOne({ email })
 
         if (!user) {

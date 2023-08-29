@@ -4,7 +4,11 @@ const { Schema } = mongoose;
 const userByRoleSchema = new Schema({
     creatorId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User' || 'UserRole'
+    },
+    reportingAgent: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User' || 'UserRole'
     },
     displayName: {
         type: String,
@@ -19,10 +23,15 @@ const userByRoleSchema = new Schema({
         type: String,
         required: true,
     },
+    phoneNumber: {
+        type: String,
+        required: true,
+    },
+
     userRole:{
         type: String,
-        enum: ['admin', 'user', 'fielduser'],
-        default: 'user'
+        enum: ['admin', '2', '3'],
+        default: '3'
     },
     resetCode:{
         type: Number,

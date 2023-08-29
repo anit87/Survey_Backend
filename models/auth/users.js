@@ -17,8 +17,8 @@ const anyUserSchema = new Schema({
     },
     userRole:{
         type: String,
-        enum: ['admin', 'user', 'fielduser'],
-        default: 'fielduser'
+        enum: ['admin', '2', '3'],
+        default: '3'
     },
     resetCode:{
         type: Number,

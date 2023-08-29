@@ -18,7 +18,7 @@ const assemblyConstituencyMembers = new Schema({
 const surveyFormSchema = new Schema({
     filledBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User' ||'UserRole' || 'FieldUserRole',
+        ref: 'User' ||'UserRole',
         required: true
     },
     respondentName: {
