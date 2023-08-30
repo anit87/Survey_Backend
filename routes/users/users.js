@@ -192,9 +192,16 @@ router.post("/record", async (req, res) => {
 
 router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
   try {
-    console.log("ssssssssss", req.query, req.user);
+    const { birthdayDate } = req.query;
+    console.log("ssssssssss", req.query," and user is  ", req.user);
+
+    let condition = {};
+
+    if (birthdayDate) {
+      condition = { birthdayDate: parseInt(birthdayDate) };
+    }
     if (req.user.userRole === 'admin') {
-      const allForms = await surveyFormSchema.find()
+      const allForms = await surveyFormSchema.find(condition)
       const allUsers = await userRoleSchema.find()
 
       const newArr = allForms.map(async (singleForm, i) => {
@@ -221,23 +228,24 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
       res.json({ status: true, data })
     } else if (req.user.userRole == '2') {
       const agentForms = await surveyFormSchema.find({ filledBy: req.user.id })
-      
-      // const fieldAgents = await userRoleSchema.find({ $or: [{ reportingAgent: req.user.id }, { creatorId: req.user.id }], userRole: { $not: { $eq: "2" } } })
 
-      // const fieldAgentForms =
-      // const fieldAgentsForms = await surveyFormSchema.find({ filledBy: fieldAgents[_id]})
+      const fieldAgents = await userRoleSchema.find({ $or: [{ reportingAgent: req.user.id }, { creatorId: req.user.id }], userRole: { $not: { $eq: "2" } } })
 
-      res.json({ status: true, data:agentForms })
+      let formsOfAllFieldAgent = [...agentForms]
+
+      const fieldAgentForms = await Promise.all(
+        fieldAgents.map(async (fieldUser) => {
+          const formsFilled = await getTotalForms(fieldUser._id)
+          formsOfAllFieldAgent = [...formsOfAllFieldAgent, ...formsFilled]
+        })
+      )
+
+      res.json({ status: true, data: formsOfAllFieldAgent })
     }
-
-
-
-
   } catch (error) {
     res.status(500).send(error.message)
   }
 
 })
-
 
 module.exports = router
