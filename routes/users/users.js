@@ -9,7 +9,7 @@ const { default: mongoose } = require("mongoose")
 
 const getTotalForms = function (userId) {
   return new Promise(async function (resolve, reject) {
-    const data = await surveyFormSchema.find({ filledBy: userId })
+    const data = await surveyFormSchema.find({ filledBy: userId }).sort({ date: -1 })
     if (data) {
       resolve(data)
     } else {
@@ -181,7 +181,7 @@ router.get("/allrecordss", async (req, res) => {
 router.post("/record", async (req, res) => {
   console.log("1 ", req.body);
   try {
-    const data = await surveyFormSchema.findById(req.body.id)
+    const data = await surveyFormSchema.findById(req.body.id).sort({ date: -1 })
     res.json({ data })
   } catch (error) {
     res.status(500).send("error")
@@ -192,16 +192,28 @@ router.post("/record", async (req, res) => {
 
 router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
   try {
-    const { birthdayDate } = req.query;
-    console.log("ssssssssss", req.query," and user is  ", req.user);
+    const { birthdayDate, monthlyHouseholdIncome, maritalStatus, startDate, endDate } = req.query;
 
     let condition = {};
 
     if (birthdayDate) {
-      condition = { birthdayDate: parseInt(birthdayDate) };
+      condition.birthdayDate = parseInt(birthdayDate);
+    }
+    if (monthlyHouseholdIncome) {
+      condition.monthlyHouseholdIncome = parseInt(monthlyHouseholdIncome);
+    }
+    if (maritalStatus) {
+      condition.maritalStatus = parseInt(maritalStatus);
+    }
+    if (startDate && endDate) {
+      condition.date = {
+        $gte: new Date(startDate + 'T00:00:00.000+00:00'),
+        $lte: new Date(endDate + 'T23:59:59.999+00:00'),
+      };
     }
     if (req.user.userRole === 'admin') {
-      const allForms = await surveyFormSchema.find(condition)
+      const allForms = await surveyFormSchema.find(condition).sort({ date: -1 })
+
       const allUsers = await userRoleSchema.find()
 
       const newArr = allForms.map(async (singleForm, i) => {
@@ -217,6 +229,7 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
             pincode: singleForm.pincode,
             mobileNo: singleForm.mobileNo,
             maritalStatus: singleForm.maritalStatus,
+            monthlyHouseholdIncome: singleForm.monthlyHouseholdIncome,
             date: singleForm.date,
             userInfo
           }
@@ -224,10 +237,10 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
       ).then(data => res.json({ status: true, data }))
 
     } else if (req.user.userRole == '3') {
-      const data = await surveyFormSchema.find({ filledBy: req.user.id })
+      const data = await surveyFormSchema.find({ filledBy: req.user.id, ...condition }).sort({ date: -1 })
       res.json({ status: true, data })
     } else if (req.user.userRole == '2') {
-      const agentForms = await surveyFormSchema.find({ filledBy: req.user.id })
+      const agentForms = await surveyFormSchema.find({ filledBy: req.user.id, ...condition }).sort({ date: -1 })
 
       const fieldAgents = await userRoleSchema.find({ $or: [{ reportingAgent: req.user.id }, { creatorId: req.user.id }], userRole: { $not: { $eq: "2" } } })
 
@@ -235,15 +248,29 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
 
       const fieldAgentForms = await Promise.all(
         fieldAgents.map(async (fieldUser) => {
-          const formsFilled = await getTotalForms(fieldUser._id)
+          // const formsFilled1 = await getTotalForms(fieldUser._id)
+          const formsFilled = await surveyFormSchema.find({ filledBy: fieldUser._id, ...condition }).sort({ date: -1 })
           formsOfAllFieldAgent = [...formsOfAllFieldAgent, ...formsFilled]
         })
       )
+      formsOfAllFieldAgent.sort((a, b) => new Date(b.date) - new Date(a.date));
 
       res.json({ status: true, data: formsOfAllFieldAgent })
     }
   } catch (error) {
     res.status(500).send(error.message)
+  }
+
+})
+
+router.get('/getuser/:id', async (req, res) => {
+  const { id } = req.params
+  console.log("1 ", id);
+  try {
+    const data = await userRoleSchema.findById(id).select('-password')
+    res.json({ status: true, data })
+  } catch (error) {
+    res.status(500).send("error")
   }
 
 })
