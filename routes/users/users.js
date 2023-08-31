@@ -114,7 +114,8 @@ router.post("/records", verifyTokenMiddleware, async (req, res) => {
   console.log("1 ", req.body);
   try {
     const data = await getTotalForms(req.body.id)
-    res.json({ data })
+    const user =await userRoleSchema.findById(req.body.id).select("-password")
+    res.json({ data,user })
   } catch (error) {
     res.status(500).send("error")
   }
