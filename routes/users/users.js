@@ -50,6 +50,7 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
                 phoneNumber: fieldUser.phoneNumber,
                 displayName: fieldUser.displayName,
                 userRole: fieldUser.userRole,
+                reportingAgent: fieldUser.reportingAgent || "",
                 surveyRecords: formsFilled
               }
             })
@@ -61,6 +62,7 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
             email: user.email,
             phoneNumber: user.phoneNumber,
             userRole: user.userRole,
+            reportingAgent: user.reportingAgent||"",
             fieldUsers: userInfo,
             surveyRecords
           };
@@ -85,6 +87,7 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
                 email: fieldUser.email,
                 displayName: fieldUser.displayName,
                 userRole: fieldUser.userRole,
+                phoneNumber: fieldUser.phoneNumber,
                 surveyRecords: formsFilled
               }
             })

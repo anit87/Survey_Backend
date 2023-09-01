@@ -23,11 +23,24 @@ const verifyToken = (token, secret) => {
 router.post("/signup", verifyTokenMiddleware, async (req, res) => {
     try {
         console.log("create --- ", req.body);
-        const { displayName, password, userRole, phoneNumber } = req.body
+        const { displayName, password, userRole, phoneNumber, id } = req.body
         const email = req.body.email.toLowerCase()
+        if (req.user.userRole === '3') {
+            res.json({ status: false, msg: "You are not authorized" })
+            return
+        }
+        if (id) {
+            let user = await userRoleSchema.findByIdAndUpdate(id,{
+                displayName,
+                email,
+                phoneNumber
+            })
+            console.log("update result", user);
+            res.status(200).json({ status: true, msg: "Updated Successfully" })
+            return
+        }
 
         let user = await userRoleSchema.findOne({ email }).select('-password')
-
         if (user) {
             res.json({
                 status: false,
@@ -38,11 +51,6 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
         }
         const saltRounds = 10;
         const hash = await bcrypt.hash(password, saltRounds)
-
-
-        if (req.user.userRole === '3') {
-            res.json({ status: false, msg: "You are not authorized" })
-        }
 
         if (req.user.userRole === "admin") {
             const newUser = new userRoleSchema({
