@@ -126,62 +126,6 @@ router.post("/records", verifyTokenMiddleware, async (req, res) => {
 })
 
 
-
-
-async function getFilteredProducts(filters) {
-  const query = await surveyFormSchema.find();
-
-
-  if (filters.birthdayDate) {
-    console.log("innnnnnnnn");
-    query.where('birthdayDate').equals(filters.birthdayDate);
-  }
-  return query;
-}
-
-router.get("/allrecordss", async (req, res) => {
-  const { birthdayDate, maritalStatus, monthlyHouseholdIncome, startDate, endDate } = req.query
-  try {
-
-    // let startDatee = new Date(startDate).toISOString()
-    // let endDatee = new Date(endDate).toISOString()
-
-    // startDatee = new Date(startDatee);
-    // startDatee.setUTCHours(0, 0, 0, 0); // Set time to start of the day
-    // endDatee = new Date(endDatee);
-    // endDatee.setUTCHours(23, 59, 59, 999);
-
-
-    console.log("ssssssssss", req.query);
-    // const data = await surveyFormSchema.find({
-    //   birthdayDate: birthdayDate == 10 ? null : birthdayDate,
-    //   maritalStatus: maritalStatus == 10 ? null : maritalStatus,
-    //   // monthlyHouseholdIncome : monthlyHouseholdIncome == 10 ? null : monthlyHouseholdIncome
-
-
-    // })
-    // console.log("data---------", data.length);
-
-    // res.json({ status: true, data })
-
-
-    getFilteredProducts(req.query)
-      .then(data => {
-        console.log("9 ", data.length);
-        res.json({ status: true, data })
-      })
-      .catch(err => {
-        console.error(err);
-      });
-
-
-  } catch (error) {
-    res.status(500).send(error.message)
-  }
-
-})
-
-
 router.post("/record", async (req, res) => {
   console.log("1 ", req.body);
   try {
@@ -204,7 +148,7 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
       condition.birthdayDate = parseInt(birthdayDate);
     }
     if (isOwnProperty) {
-      condition.isOwnProperty = parseInt(isOwnProperty);
+      condition.isOwnProperty = isOwnProperty === 'true' ? 1 : 0;
     }
     if (monthlyHouseholdIncome) {
       condition.monthlyHouseholdIncome = parseInt(monthlyHouseholdIncome);
