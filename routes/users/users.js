@@ -62,7 +62,7 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
             email: user.email,
             phoneNumber: user.phoneNumber,
             userRole: user.userRole,
-            reportingAgent: user.reportingAgent||"",
+            reportingAgent: user.reportingAgent || "",
             fieldUsers: userInfo,
             surveyRecords
           };
@@ -117,8 +117,8 @@ router.post("/records", verifyTokenMiddleware, async (req, res) => {
   console.log("1 ", req.body);
   try {
     const data = await getTotalForms(req.body.id)
-    const user =await userRoleSchema.findById(req.body.id).select("-password")
-    res.json({ data,user })
+    const user = await userRoleSchema.findById(req.body.id).select("-password")
+    res.json({ data, user })
   } catch (error) {
     res.status(500).send("error")
   }
@@ -196,18 +196,30 @@ router.post("/record", async (req, res) => {
 
 router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
   try {
-    const { birthdayDate, monthlyHouseholdIncome, maritalStatus, startDate, endDate } = req.query;
-
+    const { birthdayDate, isOwnProperty, monthlyHouseholdIncome, maritalStatus, occupationStatus, religion, cweEducation, startDate, endDate } = req.query;
+    console.log("filters ", req.query);
     let condition = {};
 
     if (birthdayDate) {
       condition.birthdayDate = parseInt(birthdayDate);
+    }
+    if (isOwnProperty) {
+      condition.isOwnProperty = parseInt(isOwnProperty);
     }
     if (monthlyHouseholdIncome) {
       condition.monthlyHouseholdIncome = parseInt(monthlyHouseholdIncome);
     }
     if (maritalStatus) {
       condition.maritalStatus = parseInt(maritalStatus);
+    }
+    if (occupationStatus) {
+      condition.occupationStatus = parseInt(occupationStatus);
+    }
+    if (religion) {
+      condition.religion = parseInt(religion);
+    }
+    if (cweEducation) {
+      condition.cweEducation = parseInt(cweEducation);
     }
     if (startDate && endDate) {
       condition.date = {
