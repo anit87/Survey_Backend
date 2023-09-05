@@ -113,6 +113,33 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
   }
 })
 
+router.get("/test", verifyTokenMiddleware, async (req, res) => {
+  try {
+    if (req.user.userRole === "admin") {
+      const result = await userRoleSchema.aggregate([
+        {
+          $match: {
+            userRole: "2"
+          }
+        },
+        {
+          $lookup: {
+            from: "userroles",
+            localField: "_id",
+            foreignField: "creatorId",
+            as: "fieldUsers",
+          }
+        }
+
+      ]);
+      res.json({ status: true, result })
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error })
+  }
+})
+
 router.post("/records", verifyTokenMiddleware, async (req, res) => {
   console.log("1 ", req.body);
   try {

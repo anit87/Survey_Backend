@@ -4,11 +4,11 @@ const { Schema } = mongoose;
 const userByRoleSchema = new Schema({
     creatorId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User' || 'UserRole'
+        ref: 'UserRole'
     },
     reportingAgent: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User' || 'UserRole'
+        ref: 'UserRole'
     },
     displayName: {
         type: String,
