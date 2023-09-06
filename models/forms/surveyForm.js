@@ -5,8 +5,8 @@ const ageGroupOfMembers = new Schema({
     age: Number,
     gender: String,
     assembly: String,
-    voterId: String,
-    voterIdNum: String,
+    voterId: Number,
+    voterIdNum: Number,
 
 });
 const assemblyConstituencyMembers = new Schema({
@@ -86,6 +86,9 @@ const surveyFormSchema = new Schema({
     },
     voterIdNumber: {
         type: Number
+    },
+    voterIdImage: {
+        type: String
     },
     ageGroupOfMembers: {
         type: [ageGroupOfMembers],
