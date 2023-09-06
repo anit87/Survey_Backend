@@ -113,10 +113,10 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
   }
 })
 
-router.get("/test", verifyTokenMiddleware, async (req, res) => {
+router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
   try {
     if (req.user.userRole === "admin") {
-      const result = await userRoleSchema.aggregate([
+      const agents = await userRoleSchema.aggregate([
         {
           $match: {
             userRole: "2"
@@ -124,15 +124,79 @@ router.get("/test", verifyTokenMiddleware, async (req, res) => {
         },
         {
           $lookup: {
-            from: "userroles",
+            from: "surveyforms",
             localField: "_id",
-            foreignField: "creatorId",
-            as: "fieldUsers",
+            foreignField: "filledBy", // Should 
+            as: "surveys",
+            pipeline: [
+              {
+                $sort: {
+                  date: -1
+                }
+              },
+              {
+                $limit: 1
+              },
+              {
+                $project: {
+                  date:1
+                }
+              }
+
+            ]
+          }
+        },
+        {
+          $project: {
+            displayName:1,
+            email:1,
+            surveys:1
           }
         }
 
       ]);
-      res.json({ status: true, result })
+      const fieldAgents = await userRoleSchema.aggregate([
+        {
+          $match: {
+            userRole: "3"
+          }
+        },
+        {
+          $lookup: {
+            from: "surveyforms",
+            localField: "_id",
+            foreignField: "filledBy",
+            as: "surveys",
+            pipeline: [
+              {
+                $sort: {
+                  date: -1
+                }
+              },
+              {
+                $limit: 1
+              },
+              {
+                $project: {
+                  date:1
+                }
+              }
+
+            ]
+          }
+        },
+        {
+          $project: {
+            displayName:1,
+            email:1,
+            surveys:1
+          }
+        }
+
+      ]);
+      res.json({ status: true, result: { agents, fieldAgents } })
+    } else {
+      res.json({ status: false, result: { agents:[], fieldAgents:[] } })
     }
   } catch (error) {
     console.log(error);
@@ -168,7 +232,7 @@ router.post("/record", async (req, res) => {
 router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
   try {
     const { birthdayDate, isOwnProperty, monthlyHouseholdIncome, maritalStatus, occupationStatus, religion, cweEducation, startDate, endDate } = req.query;
-    console.log("filters ", req.query);
+    // console.log("filters ", req.query);
     let condition = {};
 
     if (birthdayDate) {
