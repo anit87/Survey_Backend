@@ -7,6 +7,7 @@ const ageGroupOfMembers = new Schema({
     assembly: String,
     voterId: Number,
     voterIdNum: Number,
+    voterIdImg: String,
 
 });
 const assemblyConstituencyMembers = new Schema({
