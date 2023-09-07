@@ -115,7 +115,7 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
 
 router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
   try {
-    if (req.user.userRole === "admin") {
+    if (req.user.userRole === "admin"||"2") {
       const agents = await userRoleSchema.aggregate([
         {
           $match: {
@@ -189,6 +189,8 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
           $project: {
             displayName:1,
             email:1,
+            creatorId:1,
+            reportingAgent:1,
             surveys:1
           }
         }
