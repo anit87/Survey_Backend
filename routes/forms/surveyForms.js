@@ -7,7 +7,6 @@ const upload = require("../../utils/uploadFile")
 
 function extractIndexesFromObjectKeys(obj) {
     const result = {};
-
     for (const key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
             const index = key.match(/\[(\d+)\]/);
@@ -17,7 +16,6 @@ function extractIndexesFromObjectKeys(obj) {
             }
         }
     }
-
     return result;
 }
 
@@ -28,13 +26,16 @@ const cpUpload = upload.fields([
     { name: 'voterIdImageMember[2]', maxCount: 10 },
     { name: 'voterIdImageMember[3]', maxCount: 10 },
     { name: 'voterIdImageMember[4]', maxCount: 10 },
-    { name: 'voterIdImageMember[5]', maxCount: 10 }
+    { name: 'voterIdImageMember[5]', maxCount: 10 },
+    { name: 'voterIdImageMember[6]', maxCount: 10 },
+    { name: 'voterIdImageMember[7]', maxCount: 10 },
+    { name: 'voterIdImageMember[8]', maxCount: 10 },
+    { name: 'voterIdImageMember[9]', maxCount: 10 }
 ])
 
 router.post("/", cpUpload, async (req, res) => {
     try {
         const extractedData = extractIndexesFromObjectKeys(req.files);
-
 
         let voterIdImage
         if (!req.files.voterIdImage) {
@@ -45,33 +46,7 @@ router.post("/", cpUpload, async (req, res) => {
         const membersList = JSON.parse(req.body.ageGroupOfMembers)
         const loc = JSON.parse(req.body.location)
 
-
-
-        // await Promise.all(for (const key in extractedData) {
-        //     console.log("11111111111```````````````````", key);
-        //     membersList.forEach((obj, i )=> {
-        //         if(key==i){
-        //             return{...obj, voterIdImg:extractedData[key][0].filename}
-        //         }
-        //     });
-        // })
-
-
-
-        // const updatedMembersList = await Promise.all(Object.keys(extractedData).map(async (key) => {
-
-        //     const matchingObject = membersList.find((obj, i) => key == i);
-
-        //     if (matchingObject) {
-        //         return { ...matchingObject, voterIdImg: extractedData[key][0].filename };
-        //     }
-
-        //     return matchingObject; // Return the original object if no match is found
-        // }));
-
         const updatedMembersList = await Promise.all(membersList.map(async (obj, i) => {
-            // console.log("11111111111```````````````````", i);
-          
             const matchingData = extractedData[i];
           
             if (matchingData) {

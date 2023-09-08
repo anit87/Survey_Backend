@@ -1,11 +1,11 @@
 const express = require("express")
+const mongoose = require("mongoose")
 const jwt = require("jsonwebtoken")
 const router = express.Router()
 require("dotenv").config()
 const verifyTokenMiddleware = require("../../utils/verifyTokenMiddleware")
 const userRoleSchema = require("../../models/auth/userByRole")
 const surveyFormSchema = require("../../models/forms/surveyForm")
-const { default: mongoose } = require("mongoose")
 
 const getTotalForms = function (userId) {
   return new Promise(async function (resolve, reject) {
@@ -34,78 +34,177 @@ router.get("/agentslist", async (req, res) => {
 router.get("/", verifyTokenMiddleware, async (req, res) => {
   try {
     if (req.user.userRole === "admin") {
-      const allAgents = await userRoleSchema.find({ userRole: '2' })
+      console.time('myCode');
+      // const allAgents = await userRoleSchema.find({ userRole: '2' })
 
-      Promise.all(
-        allAgents.map(async (user, index) => {
-          const fieldUsers = await userRoleSchema.find({ $or: [{ reportingAgent: user._id }, { creatorId: user._id }], userRole: { $not: { $eq: "2" } } })
-          // const fieldUsers = await userRoleSchema.find({ reportingAgent: user._id  creatorId: user._id })
+      // Promise.all(
+      //   allAgents.map(async (user, index) => {
+      //     const fieldUsers = await userRoleSchema.find({ $or: [{ reportingAgent: user._id }, { creatorId: user._id }], userRole: { $not: { $eq: "2" } } })
+      //     // const fieldUsers = await userRoleSchema.find({ reportingAgent: user._id  creatorId: user._id })
 
-          const userInfo = await Promise.all(
-            fieldUsers.map(async (fieldUser) => {
-              const formsFilled = await getTotalForms(fieldUser._id)
-              return {
-                _id: fieldUser._id,
-                email: fieldUser.email,
-                phoneNumber: fieldUser.phoneNumber,
-                displayName: fieldUser.displayName,
-                userRole: fieldUser.userRole,
-                reportingAgent: fieldUser.reportingAgent || "",
-                surveyRecords: formsFilled
-              }
-            })
-          )
-          const surveyRecords = await getTotalForms(user._id)
-          return {
-            _id: user._id,
-            displayName: user.displayName,
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-            userRole: user.userRole,
-            reportingAgent: user.reportingAgent || "",
-            fieldUsers: userInfo,
-            surveyRecords
-          };
-        })
-      ).then(result => res.json({ status: true, result }))
+      //     const userInfo = await Promise.all(
+      //       fieldUsers.map(async (fieldUser) => {
+      //         const formsFilled = await getTotalForms(fieldUser._id)
+      //         return {
+      //           _id: fieldUser._id,
+      //           email: fieldUser.email,
+      //           phoneNumber: fieldUser.phoneNumber,
+      //           displayName: fieldUser.displayName,
+      //           userRole: fieldUser.userRole,
+      //           reportingAgent: fieldUser.reportingAgent || "",
+      //           surveyRecords: formsFilled
+      //         }
+      //       })
+      //     )
+      //     const surveyRecords = await getTotalForms(user._id)
+      //     return {
+      //       _id: user._id,
+      //       displayName: user.displayName,
+      //       email: user.email,
+      //       phoneNumber: user.phoneNumber,
+      //       userRole: user.userRole,
+      //       reportingAgent: user.reportingAgent || "",
+      //       fieldUsers: userInfo,
+      //       surveyRecords
+      //     };
+      //   })
+      // ).then(result => (console.timeEnd('myCode'), res.json({ status: true, result })))
+
+
+      const result = await userRoleSchema.aggregate(
+        [
+          {
+            $match: {
+              userRole: "2",
+            },
+          },
+          {
+            $lookup: {
+              from: "userroles",
+              let: {
+                userId: "$_id",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        {
+                          $or: [
+                            {
+                              $eq: [
+                                "$creatorId",
+                                "$$userId",
+                              ],
+                            },
+                            {
+                              $eq: [
+                                "$reportingAgent",
+                                "$$userId",
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          $eq: ["$userRole", "3"],
+                        },
+                      ],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "surveyforms",
+                    localField: "_id",
+                    foreignField: "filledBy",
+                    as: "surveyRecords",
+                  },
+                },
+              ],
+              as: "fieldUsers",
+            },
+          },
+          {
+            $lookup: {
+              from: "surveyforms",
+              localField: "_id",
+              foreignField: "filledBy",
+              as: "surveyRecords",
+            },
+          },
+        ]
+      )
+      console.timeEnd('myCode');
+
+      res.json({ status: true, result })
     }
     if (req.user.userRole !== "admin") {
-      const users = await userRoleSchema.find({ creatorId: req.user.id })
-      let totalResults = 0
+      console.log("-----------------------------------", req.user.id, typeof req.user.id);
+      const agents = await userRoleSchema.aggregate([
+        {
+          $match: {
+            $or: [
+              {
+                creatorId: new mongoose.Types.ObjectId(req.user.id),
+              },
+              {
+                reportingAgent: new mongoose.Types.ObjectId(req.user.id),
+              },
+            ],
+            $and: [
+              {
+                userRole: "3",
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "surveyforms",
+            localField: "_id",
+            foreignField: "filledBy",
+            as: "surveyRecords",
+          },
+        },
+        {
+          $addFields: {
+            fieldUsers: [],
+          },
+        },
+      ]);
 
-      Promise.all(
-        users.map(async (user, index) => {
-          const fieldUsers = await userRoleSchema.find({ creatorId: user._id })
+      res.json({ status: true, result: agents })
 
-          const userInfo = await Promise.all(
-            fieldUsers.map(async (fieldUser, i) => {
-              const formsFilled = await getTotalForms(fieldUser._id)
-              totalResults = +formsFilled.length
-              // console.log("------------------------",i,fieldUser.email, totalResults);
-              return {
-                _id: fieldUser._id,
-                email: fieldUser.email,
-                displayName: fieldUser.displayName,
-                userRole: fieldUser.userRole,
-                phoneNumber: fieldUser.phoneNumber,
-                surveyRecords: formsFilled
-              }
-            })
-          )
-          const surveyRecords = await getTotalForms(user._id)
-          totalResults += surveyRecords.length
-          // console.log("***********************", user.email , totalResults);
+      // const users = await userRoleSchema.find({ creatorId: req.user.id })     // all F users
+      // Promise.all(
+      //   users.map(async (user, index) => {
+      //     const fieldUsers = await userRoleSchema.find({ creatorId: user._id })
 
-          return {
-            _id: user._id,
-            displayName: user.displayName,
-            email: user.email,
-            userRole: user.userRole,
-            fieldUsers: userInfo,
-            surveyRecords
-          };
-        })
-      ).then(result => res.json({ status: true, result, totalResults }))
+      //     const userInfo = await Promise.all(
+      //       fieldUsers.map(async (fieldUser, i) => {
+      //         const formsFilled = await getTotalForms(fieldUser._id)
+      //         return {
+      //           _id: fieldUser._id,
+      //           email: fieldUser.email,
+      //           displayName: fieldUser.displayName,
+      //           userRole: fieldUser.userRole,
+      //           phoneNumber: fieldUser.phoneNumber,
+      //           surveyRecords: formsFilled
+      //         }
+      //       })
+      //     )
+      //     const surveyRecords = await getTotalForms(user._id)
+
+      //     return {
+      //       _id: user._id,
+      //       displayName: user.displayName,
+      //       email: user.email,
+      //       userRole: user.userRole,
+      //       fieldUsers: userInfo,
+      //       surveyRecords
+      //     };
+      //   })
+      // ).then(result => res.json({ status: true, result }))
     }
   } catch (error) {
     console.log(error);
@@ -115,7 +214,7 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
 
 router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
   try {
-    if (req.user.userRole === "admin"||"2") {
+    if (req.user.userRole === "admin" || "2") {
       const agents = await userRoleSchema.aggregate([
         {
           $match: {
@@ -139,7 +238,7 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
               },
               {
                 $project: {
-                  date:1
+                  date: 1
                 }
               }
 
@@ -148,12 +247,11 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
         },
         {
           $project: {
-            displayName:1,
-            email:1,
-            surveys:1
+            displayName: 1,
+            email: 1,
+            surveys: 1
           }
         }
-
       ]);
       const fieldAgents = await userRoleSchema.aggregate([
         {
@@ -178,7 +276,7 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
               },
               {
                 $project: {
-                  date:1
+                  date: 1
                 }
               }
 
@@ -187,18 +285,18 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
         },
         {
           $project: {
-            displayName:1,
-            email:1,
-            creatorId:1,
-            reportingAgent:1,
-            surveys:1
+            displayName: 1,
+            email: 1,
+            creatorId: 1,
+            reportingAgent: 1,
+            surveys: 1
           }
         }
 
       ]);
       res.json({ status: true, result: { agents, fieldAgents } })
     } else {
-      res.json({ status: false, result: { agents:[], fieldAgents:[] } })
+      res.json({ status: false, result: { agents: [], fieldAgents: [] } })
     }
   } catch (error) {
     console.log(error);
