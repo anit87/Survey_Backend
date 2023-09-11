@@ -27,6 +27,12 @@ const userByRoleSchema = new Schema({
         type: String,
         required: true,
     },
+    boothNumber: {
+        type: String
+    },
+    constituency: {
+        type: String
+    },
 
     userRole:{
         type: String,

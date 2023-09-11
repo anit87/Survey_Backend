@@ -22,7 +22,7 @@ const verifyToken = (token, secret) => {
 // Create User with email and password
 router.post("/signup", verifyTokenMiddleware, async (req, res) => {
     try {
-        const { displayName, password, userRole, phoneNumber, id } = req.body
+        const { displayName, password, userRole, phoneNumber,constituency,boothNumber, id } = req.body
         const email = req.body.email.toLowerCase()
         if (req.user.userRole === '3') {
             res.json({ status: false, msg: "You are not authorized" })
@@ -59,7 +59,9 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
                 email,
                 userRole,
                 password: hash,
-                phoneNumber
+                phoneNumber,
+                boothNumber,
+                constituency
             })
             await newUser.save()
             res.status(201).json({ status: true, msg: "User Created Successfully" })
@@ -72,7 +74,9 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
                 email,
                 userRole,
                 password: hash,
-                phoneNumber
+                phoneNumber,
+                boothNumber,
+                constituency
             })
             const data = await newUser.save()
             res.status(201).json({ status: true, msg: "User Created Successfully" })

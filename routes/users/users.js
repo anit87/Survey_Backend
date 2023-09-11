@@ -91,18 +91,8 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
                       $and: [
                         {
                           $or: [
-                            {
-                              $eq: [
-                                "$creatorId",
-                                "$$userId",
-                              ],
-                            },
-                            {
-                              $eq: [
-                                "$reportingAgent",
-                                "$$userId",
-                              ],
-                            },
+                            { $eq: ["$creatorId", "$$userId",], },
+                            { $eq: ["$reportingAgent", "$$userId",], },
                           ],
                         },
                         {
@@ -225,7 +215,7 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
           $lookup: {
             from: "surveyforms",
             localField: "_id",
-            foreignField: "filledBy", // Should 
+            foreignField: "filledBy",
             as: "surveys",
             pipeline: [
               {
@@ -331,7 +321,7 @@ router.post("/record", async (req, res) => {
 
 router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
   try {
-    const { birthdayDate, isOwnProperty, monthlyHouseholdIncome, maritalStatus, occupationStatus, religion, cweEducation, startDate, endDate } = req.query;
+    const { birthdayDate, isOwnProperty, monthlyHouseholdIncome, maritalStatus, occupationStatus, religion,caste, cweEducation, startDate, endDate } = req.query;
     // console.log("filters ", req.query);
     let condition = {};
 
@@ -352,6 +342,9 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
     }
     if (religion) {
       condition.religion = parseInt(religion);
+    }
+    if (caste) {
+      condition.caste = parseInt(caste);
     }
     if (cweEducation) {
       condition.cweEducation = parseInt(cweEducation);
