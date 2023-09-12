@@ -1,8 +1,11 @@
 const express = require("express")
+const fs = require('fs');
+const path = require('path');
 const surveyFormSchema = require("../../models/forms/surveyForm")
 const router = express.Router()
 require("dotenv").config()
-const upload = require("../../utils/uploadFile")
+const cpUpload = require("../../utils/uploadFile")
+const {saveBase64Image}= require("../../utils/functions")
 
 
 function extractIndexesFromObjectKeys(obj) {
@@ -19,19 +22,6 @@ function extractIndexesFromObjectKeys(obj) {
     return result;
 }
 
-const cpUpload = upload.fields([
-    { name: 'voterIdImage', maxCount: 10 },
-    { name: 'voterIdImageMember[0]', maxCount: 10 },
-    { name: 'voterIdImageMember[1]', maxCount: 10 },
-    { name: 'voterIdImageMember[2]', maxCount: 10 },
-    { name: 'voterIdImageMember[3]', maxCount: 10 },
-    { name: 'voterIdImageMember[4]', maxCount: 10 },
-    { name: 'voterIdImageMember[5]', maxCount: 10 },
-    { name: 'voterIdImageMember[6]', maxCount: 10 },
-    { name: 'voterIdImageMember[7]', maxCount: 10 },
-    { name: 'voterIdImageMember[8]', maxCount: 10 },
-    { name: 'voterIdImageMember[9]', maxCount: 10 }
-])
 
 router.post("/", cpUpload, async (req, res) => {
     try {
@@ -43,19 +33,29 @@ router.post("/", cpUpload, async (req, res) => {
         } else {
             voterIdImage = req.files.voterIdImage[0].filename
         }
+        if (req.body.voterIdImagee) {
+            const base64Image = req.body.voterIdImagee;
+            voterIdImage = saveBase64Image(base64Image);
+        }
         const membersList = JSON.parse(req.body.ageGroupOfMembers)
         const loc = JSON.parse(req.body.location)
 
         const updatedMembersList = await Promise.all(membersList.map(async (obj, i) => {
             const matchingData = extractedData[i];
-          
+            const matchingCapturedData = req.body.voterIdImageMember[i];
+
             if (matchingData) {
-              return { ...obj, voterIdImg: matchingData[0].filename };
+                return { ...obj, voterIdImg: matchingData[0].filename };
             }
-          
+            if (matchingCapturedData) {
+                imageName = saveBase64Image(matchingCapturedData);
+                return { ...obj, voterIdImg: imageName };
+            }
+
+
             return obj; // Return the original object if no match is found
-          }));
-        // console.log("-----------***********", updatedMembersList);
+        }));
+        console.log("-----------***********", updatedMembersList);
         const newForm = new surveyFormSchema({ ...req.body, ageGroupOfMembers: updatedMembersList, location: loc, voterIdImage })
         const data = await newForm.save()
         res.status(201).json({ status: true, msg: "Successfully Saved", data })

@@ -11,4 +11,19 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage })
 
-module.exports = upload;
+
+const cpUpload = upload.fields([
+    { name: 'voterIdImage', maxCount: 10 },
+    { name: 'voterIdImageMember[0]', maxCount: 10 },
+    { name: 'voterIdImageMember[1]', maxCount: 10 },
+    { name: 'voterIdImageMember[2]', maxCount: 10 },
+    { name: 'voterIdImageMember[3]', maxCount: 10 },
+    { name: 'voterIdImageMember[4]', maxCount: 10 },
+    { name: 'voterIdImageMember[5]', maxCount: 10 },
+    { name: 'voterIdImageMember[6]', maxCount: 10 },
+    { name: 'voterIdImageMember[7]', maxCount: 10 },
+    { name: 'voterIdImageMember[8]', maxCount: 10 },
+    { name: 'voterIdImageMember[9]', maxCount: 10 }
+])
+
+module.exports = cpUpload;
