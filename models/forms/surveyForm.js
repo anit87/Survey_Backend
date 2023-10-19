@@ -91,6 +91,9 @@ const surveyFormSchema = new Schema({
     voterIdImage: {
         type: String
     },
+    locationPicture: {
+        type: String
+    },
     ageGroupOfMembers: {
         type: [ageGroupOfMembers],
         required: true,

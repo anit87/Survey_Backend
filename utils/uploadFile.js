@@ -14,6 +14,7 @@ const upload = multer({ storage: storage })
 
 const cpUpload = upload.fields([
     { name: 'voterIdImage', maxCount: 10 },
+    { name: 'locationPicture', maxCount: 10 },
     { name: 'voterIdImageMember[0]', maxCount: 10 },
     { name: 'voterIdImageMember[1]', maxCount: 10 },
     { name: 'voterIdImageMember[2]', maxCount: 10 },

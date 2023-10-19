@@ -37,6 +37,18 @@ router.post("/", cpUpload, async (req, res) => {
             const base64Image = req.body.voterIdImagee;
             voterIdImage = saveBase64Image(base64Image);
         }
+
+
+        let locationPicture
+        if (!req.files.locationPicture) {
+            locationPicture = ""
+        } else {
+            locationPicture = req.files.locationPicture[0].filename
+        }
+        if (req.body.locationPicturee) {
+            const base64Image = req.body.locationPicturee;
+            locationPicture = saveBase64Image(base64Image);
+        }
         const membersList = JSON.parse(req.body.ageGroupOfMembers)
         const loc = JSON.parse(req.body.location)
 
@@ -55,8 +67,8 @@ router.post("/", cpUpload, async (req, res) => {
 
             return obj; // Return the original object if no match is found
         }));
-        console.log("-----------***********", updatedMembersList);
-        const newForm = new surveyFormSchema({ ...req.body, ageGroupOfMembers: updatedMembersList, location: loc, voterIdImage })
+        // console.log("-----------***********", updatedMembersList);
+        const newForm = new surveyFormSchema({ ...req.body, ageGroupOfMembers: updatedMembersList, location: loc, voterIdImage, locationPicture })
         const data = await newForm.save()
         res.status(201).json({ status: true, msg: "Successfully Saved", data })
     } catch (error) {
