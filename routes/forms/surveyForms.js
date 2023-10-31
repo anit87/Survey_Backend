@@ -5,7 +5,7 @@ const surveyFormSchema = require("../../models/forms/surveyForm")
 const router = express.Router()
 require("dotenv").config()
 const cpUpload = require("../../utils/uploadFile")
-const {saveBase64Image,convertBase64ToImage}= require("../../utils/functions")
+const { saveBase64Image, convertBase64ToImage } = require("../../utils/functions")
 
 
 function extractIndexesFromObjectKeys(obj) {
@@ -25,6 +25,7 @@ function extractIndexesFromObjectKeys(obj) {
 
 router.post("/", cpUpload, async (req, res) => {
     try {
+        console.log("SUBMIT FORM", req.body);
         const extractedData = extractIndexesFromObjectKeys(req.files);
 
         let voterIdImage
@@ -51,7 +52,7 @@ router.post("/", cpUpload, async (req, res) => {
         }
         const membersList = JSON.parse(req.body.ageGroupOfMembers)
         const loc = JSON.parse(req.body.location)
-
+        console.log("membersList---", membersList);
         const updatedMembersList = await Promise.all(membersList.map(async (obj, i) => {
             const matchingData = extractedData[i];
             const matchingCapturedData = req.body.voterIdImageMember[i];
