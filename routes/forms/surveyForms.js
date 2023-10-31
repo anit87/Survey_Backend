@@ -5,7 +5,7 @@ const surveyFormSchema = require("../../models/forms/surveyForm")
 const router = express.Router()
 require("dotenv").config()
 const cpUpload = require("../../utils/uploadFile")
-const {saveBase64Image}= require("../../utils/functions")
+const {saveBase64Image,convertBase64ToImage}= require("../../utils/functions")
 
 
 function extractIndexesFromObjectKeys(obj) {
@@ -35,7 +35,7 @@ router.post("/", cpUpload, async (req, res) => {
         }
         if (req.body.voterIdImagee) {
             const base64Image = req.body.voterIdImagee;
-            voterIdImage = saveBase64Image(base64Image);
+            voterIdImage = convertBase64ToImage(base64Image);
         }
 
 
@@ -47,7 +47,7 @@ router.post("/", cpUpload, async (req, res) => {
         }
         if (req.body.locationPicturee) {
             const base64Image = req.body.locationPicturee;
-            locationPicture = saveBase64Image(base64Image);
+            locationPicture = convertBase64ToImage(base64Image);
         }
         const membersList = JSON.parse(req.body.ageGroupOfMembers)
         const loc = JSON.parse(req.body.location)
@@ -60,14 +60,14 @@ router.post("/", cpUpload, async (req, res) => {
                 return { ...obj, voterIdImg: matchingData[0].filename };
             }
             if (matchingCapturedData) {
-                imageName = saveBase64Image(matchingCapturedData);
+                imageName = convertBase64ToImage(matchingCapturedData);
                 return { ...obj, voterIdImg: imageName };
             }
 
 
             return obj; // Return the original object if no match is found
         }));
-        // console.log("-----------***********", updatedMembersList);
+        
         const newForm = new surveyFormSchema({ ...req.body, ageGroupOfMembers: updatedMembersList, location: loc, voterIdImage, locationPicture })
         const data = await newForm.save()
         res.status(201).json({ status: true, msg: "Successfully Saved", data })
