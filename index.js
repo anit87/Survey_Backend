@@ -19,19 +19,7 @@ app.use("/auth", authRouter)
 app.use("/forms", formsRouter)
 app.use("/users", usersRouter)
 
-// app.get('/', (req, res) => {
-//   res.send('Hello World!')
-// })
-
 app.get('/', (req, res) => {
-  const userData = {
-    id: 123,
-    username: 'exampleuser',
-    role: 'admin', 
-  };
-
-  // Set a cookie
-  res.cookie('user', userData, { maxAge: 5000, httpOnly: true });
   res.json({ message: 'Server is Running' });
 });
 
@@ -39,8 +27,6 @@ app.get('/test-cookie', (req, res) => {
   res.cookie('test', '123', { maxAge: 3600000, httpOnly: true });
   res.json({ message: 'Cookie set successfully' });
 });
-
-
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`)

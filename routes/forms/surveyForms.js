@@ -25,58 +25,55 @@ function extractIndexesFromObjectKeys(obj) {
 
 router.post("/", cpUpload, async (req, res) => {
     try {
-        console.log("SUBMIT FORM", req.body);
         const extractedData = extractIndexesFromObjectKeys(req.files);
 
-        let voterIdImage
-        if (!req.files.voterIdImage) {
-            voterIdImage = ""
-        } else {
-            voterIdImage = req.files.voterIdImage[0].filename
+        let voterIdImage = "";
+        if (req.files.voterIdImage && req.files.voterIdImage[0]) {
+            voterIdImage = req.files.voterIdImage[0].filename;
         }
         if (req.body.voterIdImagee) {
             const base64Image = req.body.voterIdImagee;
             voterIdImage = convertBase64ToImage(base64Image);
         }
 
-
-        let locationPicture
-        if (!req.files.locationPicture) {
-            locationPicture = ""
-        } else {
-            locationPicture = req.files.locationPicture[0].filename
+        let locationPicture = "";
+        if (req.files.locationPicture && req.files.locationPicture[0]) {
+            locationPicture = req.files.locationPicture[0].filename;
         }
         if (req.body.locationPicturee) {
             const base64Image = req.body.locationPicturee;
             locationPicture = convertBase64ToImage(base64Image);
         }
-        const membersList = JSON.parse(req.body.ageGroupOfMembers)
-        const loc = JSON.parse(req.body.location)
+
+        const membersList = await JSON.parse(req.body.ageGroupOfMembers);
+
         console.log("membersList---", membersList);
+
         const updatedMembersList = await Promise.all(membersList.map(async (obj, i) => {
             const matchingData = extractedData[i];
-            const matchingCapturedData = req.body.voterIdImageMember[i];
+            const matchingCapturedData = req.body.voterIdImageMember ? req.body.voterIdImageMember[i] : undefined;
 
-            if (matchingData) {
+            if (matchingData && matchingData[0]) {
                 return { ...obj, voterIdImg: matchingData[0].filename };
             }
             if (matchingCapturedData) {
-                imageName = convertBase64ToImage(matchingCapturedData);
+                const imageName = convertBase64ToImage(matchingCapturedData);
                 return { ...obj, voterIdImg: imageName };
             }
 
-
             return obj; // Return the original object if no match is found
         }));
-        
-        const newForm = new surveyFormSchema({ ...req.body, ageGroupOfMembers: updatedMembersList, location: loc, voterIdImage, locationPicture })
-        const data = await newForm.save()
-        res.status(201).json({ status: true, msg: "Successfully Saved", data })
+
+        console.log("updatedMembersList---", updatedMembersList);
+
+        const newForm = new surveyFormSchema({ ...req.body, ageGroupOfMembers: updatedMembersList, voterIdImage, locationPicture });
+        const data = await newForm.save();
+        res.status(201).json({ status: true, msg: "Successfully Saved", data });
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error })
+        res.status(500).json({ error });
     }
-})
+});
 
 module.exports = router
 
