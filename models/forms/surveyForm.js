@@ -40,9 +40,6 @@ const surveyFormSchema = new Schema({
         type: Number,
         required: true,
     },
-    residingYears: {
-        type: Number
-    },
     isOwnProperty: {
         type: Number,
         required: true,
@@ -50,9 +47,6 @@ const surveyFormSchema = new Schema({
     totalMembers: {
         type: Number,
         required: true,
-    },
-    stayingMembers: {
-        type: Number
     },
     religion: {
         type: String,
@@ -65,9 +59,6 @@ const surveyFormSchema = new Schema({
     cweEducation: {
         type: Number,
         required: true,
-    },
-    respondentEducation: {
-        type: Number
     },
     birthdayDate: {
         type: Number,

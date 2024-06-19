@@ -26,6 +26,10 @@ function saveBase64Image(base64Image) {
     }
 }
 function convertBase64ToImage(base64String) {
+    if (!base64String || base64String === 'null') {
+        return null;
+    }
+
     try {
         const base64Data = base64String.replace(/^data:image\/\w+;base64,/, '');
         const buffer = Buffer.from(base64Data, 'base64');
