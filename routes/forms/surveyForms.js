@@ -78,7 +78,7 @@ router.post("/", cpUpload, async (req, res) => {
 });
 router.put("/:formId", cpUpload, async (req, res) => {
     try {
-        const { formId } = req.params
+        const { formId } = req.params;
         const extractedData = extractIndexesFromObjectKeys(req.files);
 
         console.log("extractedData---- ", extractedData);
@@ -123,7 +123,19 @@ router.put("/:formId", cpUpload, async (req, res) => {
 
         console.log("updatedMembersList---", updatedMembersList);
 
-        const data = await surveyFormSchema.findByIdAndUpdate(formId, { ...req.body, ageGroupOfMembers: updatedMembersList, voterIdImage, locationPicture });
+        // Ensure voterIdNumber is a number or null
+        if (req.body.voterIdNumber === 'null' || req.body.voterIdNumber === '') {
+            req.body.voterIdNumber = null;
+        } else {
+            req.body.voterIdNumber = Number(req.body.voterIdNumber);
+        }
+
+        const data = await surveyFormSchema.findByIdAndUpdate(formId, {
+            ...req.body,
+            ageGroupOfMembers: updatedMembersList,
+            voterIdImage,
+            locationPicture
+        });
 
         res.status(201).json({ status: true, msg: "Successfully Updated", data });
     } catch (error) {

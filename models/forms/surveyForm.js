@@ -53,8 +53,7 @@ const surveyFormSchema = new Schema({
         required: true,
     },
     caste: {
-        type: String,
-        required: true,
+        type: String
     },
     cweEducation: {
         type: Number,
