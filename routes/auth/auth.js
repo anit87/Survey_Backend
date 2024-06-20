@@ -22,14 +22,16 @@ const verifyToken = (token, secret) => {
 // Create User with email and password
 router.post("/signup", verifyTokenMiddleware, async (req, res) => {
     try {
-        const { displayName, password, userRole, phoneNumber,constituency,boothNumber, id } = req.body
-        const email = req.body.email.toLowerCase()
+        const { displayName, password, userRole, phoneNumber, constituency, boothNumber, wardNumber, id } = req.body;
+        const email = req.body.email.toLowerCase();
+
         if (req.user.userRole === '3') {
             res.json({ status: false, msg: "You are not authorized" })
             return
         }
+
         if (id) {
-            let user = await userRoleSchema.findByIdAndUpdate(id,{
+            let user = await userRoleSchema.findByIdAndUpdate(id, {
                 displayName,
                 email,
                 phoneNumber
@@ -39,7 +41,7 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
             return
         }
 
-        let user = await userRoleSchema.findOne({ email }).select('-password')
+        let user = await userRoleSchema.findOne({ email }).select('-password');
         if (user) {
             res.json({
                 status: false,
@@ -49,7 +51,7 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
             return
         }
         const saltRounds = 10;
-        const hash = await bcrypt.hash(password, saltRounds)
+        const hash = await bcrypt.hash(password, saltRounds);
 
         if (req.user.userRole === "admin") {
             const newUser = new userRoleSchema({
@@ -61,6 +63,7 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
                 password: hash,
                 phoneNumber,
                 boothNumber,
+                wardNumber,
                 constituency
             })
             await newUser.save()
@@ -76,6 +79,7 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
                 password: hash,
                 phoneNumber,
                 boothNumber,
+                wardNumber,
                 constituency
             })
             const data = await newUser.save()

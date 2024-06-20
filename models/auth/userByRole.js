@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const userByRoleSchema = new Schema({
@@ -33,7 +33,9 @@ const userByRoleSchema = new Schema({
     constituency: {
         type: String
     },
-
+    wardNumber: {
+        type: String
+    },
     userRole:{
         type: String,
         enum: ['admin', '2', '3'],
@@ -47,4 +49,4 @@ const userByRoleSchema = new Schema({
 });
 
 const UserRole = mongoose.model('UserRole', userByRoleSchema);
-module.exports= UserRole
+module.exports= UserRole;

@@ -1,5 +1,6 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 const { Schema } = mongoose;
+
 const ageGroupOfMembers = new Schema({
     name: String,
     age: Number,
@@ -8,8 +9,8 @@ const ageGroupOfMembers = new Schema({
     voterId: Number,
     voterIdNum: Number,
     voterIdImg: String,
-
 });
+
 const assemblyConstituencyMembers = new Schema({
     name: String,
     age: Number,
@@ -53,7 +54,7 @@ const surveyFormSchema = new Schema({
         required: true,
     },
     caste: {
-        type: String
+        type: String,
     },
     cweEducation: {
         type: Number,
@@ -64,7 +65,7 @@ const surveyFormSchema = new Schema({
         required: true,
     },
     isParticipated: {
-        type: Number,
+        type: [Number], // Ensure this is an array of numbers
         required: true,
     },
     categoryFallUnder: {
@@ -76,23 +77,23 @@ const surveyFormSchema = new Schema({
         required: true,
     },
     voterIdNumber: {
-        type: Number
+        type: Number,
     },
     voterIdImage: {
-        type: String
+        type: String,
     },
     locationPicture: {
-        type: String
+        type: String,
     },
     ageGroupOfMembers: {
         type: [ageGroupOfMembers],
         required: true,
     },
     assemblyConstituencyMembers: {
-        type: [assemblyConstituencyMembers]
+        type: [assemblyConstituencyMembers],
     },
     voterIDsList: {
-        type: [assemblyConstituencyMembers]
+        type: [assemblyConstituencyMembers],
     },
     maritalStatus: {
         type: Number,
@@ -106,10 +107,12 @@ const surveyFormSchema = new Schema({
         type: Number,
         required: true,
     },
-    date: { type: Date, default: Date.now },
+    date: {
+        type: Date,
+        default: Date.now,
+    },
 });
 
 const SurveyForm = mongoose.model('SurveyForm', surveyFormSchema);
 
-module.exports = SurveyForm
-
+module.exports = SurveyForm;

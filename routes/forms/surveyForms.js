@@ -47,7 +47,7 @@ router.post("/", cpUpload, async (req, res) => {
             locationPicture = convertBase64ToImage(base64Image);
         }
 
-        const membersList = await JSON.parse(req.body.ageGroupOfMembers);
+        const membersList = JSON.parse(req.body.ageGroupOfMembers);
 
         console.log("membersList---", membersList);
 
@@ -68,7 +68,20 @@ router.post("/", cpUpload, async (req, res) => {
 
         console.log("updatedMembersList---", updatedMembersList);
 
-        const newForm = new surveyFormSchema({ ...req.body, ageGroupOfMembers: updatedMembersList, voterIdImage, locationPicture });
+        // Parse isParticipated to an array of numbers
+        let isParticipated = [];
+        if (req.body.isParticipated) {
+            isParticipated = JSON.parse(req.body.isParticipated).map(Number);
+        }
+
+        const newForm = new surveyFormSchema({ 
+            ...req.body, 
+            ageGroupOfMembers: updatedMembersList, 
+            voterIdImage, 
+            locationPicture,
+            isParticipated
+        });
+
         const data = await newForm.save();
         res.status(201).json({ status: true, msg: "Successfully Saved" });
     } catch (error) {
@@ -76,6 +89,7 @@ router.post("/", cpUpload, async (req, res) => {
         res.status(500).json({ error });
     }
 });
+
 router.put("/:formId", cpUpload, async (req, res) => {
     try {
         const { formId } = req.params;
