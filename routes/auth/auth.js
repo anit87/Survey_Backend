@@ -1,13 +1,13 @@
-const express = require("express")
-const bcrypt = require("bcrypt")
-const jwt = require("jsonwebtoken")
-const router = express.Router()
-require("dotenv").config()
-const verifyTokenMiddleware = require("../../utils/verifyTokenMiddleware")
+const express = require("express");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const router = express.Router();
+require("dotenv").config();
+const verifyTokenMiddleware = require("../../utils/verifyTokenMiddleware");
 
-const { sendEmail, generateRandomCode } = require("../../utils/sendMail")
-const userSchema = require("../../models/auth/users")
-const userRoleSchema = require("../../models/auth/userByRole")
+const { sendEmail, generateRandomCode } = require("../../utils/sendMail");
+const userSchema = require("../../models/auth/users");
+const userRoleSchema = require("../../models/auth/userByRole");
 
 const verifyToken = (token, secret) => {
     try {
@@ -34,7 +34,7 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
                 email,
                 phoneNumber
             })
-            // console.log("update result", user);
+
             res.status(200).json({ status: true, msg: "Updated Successfully" })
             return
         }
@@ -98,7 +98,6 @@ router.post("/signin", async (req, res) => {
         if (!user) {
             user = await userRoleSchema.findOne({ email })
         }
-        // console.log("user sign in ", user);
 
         if (!user) {
             res.json({
@@ -108,7 +107,7 @@ router.post("/signin", async (req, res) => {
             return
         }
         const result = await bcrypt.compare(password, user.password)
-        // console.log("result ", result);
+
         if (!result) {
             res.json({
                 status: false,
@@ -168,11 +167,10 @@ router.post("/resetpassword", async (req, res) => {
             return
         }
         const resetCode = generateRandomCode()
-        // console.log("1 resetCode ", resetCode);
 
         await sendEmail(email, "Reset Password", resetCode)
         user = await userSchema.findOneAndUpdate({ email }, { resetCode })
-        // console.log("2 ", user);
+
         res.json({ status: true, msg: "Check Your Email", email: user.email, resetCode })
 
     } catch (error) {

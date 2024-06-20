@@ -1,11 +1,11 @@
-const express = require("express")
-const mongoose = require("mongoose")
-const jwt = require("jsonwebtoken")
-const router = express.Router()
-require("dotenv").config()
-const verifyTokenMiddleware = require("../../utils/verifyTokenMiddleware")
-const userRoleSchema = require("../../models/auth/userByRole")
-const surveyFormSchema = require("../../models/forms/surveyForm")
+const express = require("express");
+const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const router = express.Router();
+require("dotenv").config();
+const verifyTokenMiddleware = require("../../utils/verifyTokenMiddleware");
+const userRoleSchema = require("../../models/auth/userByRole");
+const surveyFormSchema = require("../../models/forms/surveyForm");
 
 const getTotalForms = function (userId) {
   return new Promise(async function (resolve, reject) {
@@ -18,9 +18,7 @@ const getTotalForms = function (userId) {
   });
 };
 
-
 router.get("/agentslist", async (req, res) => {
-  console.log("1 ", req.body);
   try {
     const data = await userRoleSchema.find({ userRole: '2' })
     res.json({ data })
@@ -29,7 +27,6 @@ router.get("/agentslist", async (req, res) => {
   }
 
 })
-
 
 router.get("/", verifyTokenMiddleware, async (req, res) => {
   try {
@@ -129,7 +126,6 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
       res.json({ status: true, result })
     }
     if (req.user.userRole !== "admin") {
-      console.log("-----------------------------------", req.user.id, typeof req.user.id);
       const agents = await userRoleSchema.aggregate([
         {
           $match: {
@@ -231,7 +227,6 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
                   date: 1
                 }
               }
-
             ]
           }
         },
@@ -284,45 +279,40 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
         }
 
       ]);
-      res.json({ status: true, result: { agents, fieldAgents } })
+      res.json({ status: true, result: { agents, fieldAgents } });
     } else {
-      res.json({ status: false, result: { agents: [], fieldAgents: [] } })
+      res.json({ status: false, result: { agents: [], fieldAgents: [] } });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error })
+    res.status(500).json({ error });
   }
 })
 
 router.post("/records", verifyTokenMiddleware, async (req, res) => {
-  console.log("1 ", req.body);
   try {
-    const data = await getTotalForms(req.body.id)
-    const user = await userRoleSchema.findById(req.body.id).select("-password")
-    res.json({ data, user })
+    const data = await getTotalForms(req.body.id);
+    const user = await userRoleSchema.findById(req.body.id).select("-password");
+    res.json({ data, user });
   } catch (error) {
-    res.status(500).send("error")
+    res.status(500).send("error");
   }
-
 })
 
 
 router.post("/record", async (req, res) => {
-  console.log("1 ", req.body);
   try {
-    const data = await surveyFormSchema.findById(req.body.id).sort({ date: -1 })
-    res.json({ data })
+    const data = await surveyFormSchema.findById(req.body.id).sort({ date: -1 });
+    res.json({ data });
   } catch (error) {
-    res.status(500).send("error")
+    res.status(500).send("error");
   }
-
 })
-
 
 router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
   try {
-    const { birthdayDate, isOwnProperty, monthlyHouseholdIncome, maritalStatus, occupationStatus, religion,caste, cweEducation, startDate, endDate } = req.query;
-    // console.log("filters ", req.query);
+    const { birthdayDate, isOwnProperty, monthlyHouseholdIncome, maritalStatus, occupationStatus, religion, caste, cweEducation, startDate, endDate } = req.query;
+
     let condition = {};
 
     if (birthdayDate) {
@@ -408,15 +398,13 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
 })
 
 router.get('/getuser/:id', async (req, res) => {
-  const { id } = req.params
-  console.log("1 ", id);
+  const { id } = req.params;
   try {
     const data = await userRoleSchema.findById(id).select('-password')
     res.json({ status: true, data })
   } catch (error) {
     res.status(500).send("error")
   }
-
 })
 
 module.exports = router
