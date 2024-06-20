@@ -74,10 +74,10 @@ router.post("/", cpUpload, async (req, res) => {
             isParticipated = JSON.parse(req.body.isParticipated).map(Number);
         }
 
-        const newForm = new surveyFormSchema({ 
-            ...req.body, 
-            ageGroupOfMembers: updatedMembersList, 
-            voterIdImage, 
+        const newForm = new surveyFormSchema({
+            ...req.body,
+            ageGroupOfMembers: updatedMembersList,
+            voterIdImage,
             locationPicture,
             isParticipated
         });
@@ -144,11 +144,18 @@ router.put("/:formId", cpUpload, async (req, res) => {
             req.body.voterIdNumber = Number(req.body.voterIdNumber);
         }
 
+        // Parse isParticipated to an array of numbers
+        let isParticipated = [];
+        if (req.body.isParticipated) {
+            isParticipated = JSON.parse(req.body.isParticipated).map(Number);
+        }
+
         const data = await surveyFormSchema.findByIdAndUpdate(formId, {
             ...req.body,
             ageGroupOfMembers: updatedMembersList,
             voterIdImage,
-            locationPicture
+            locationPicture,
+            isParticipated
         });
 
         res.status(201).json({ status: true, msg: "Successfully Updated", data });
