@@ -1,12 +1,11 @@
-const express = require("express")
+const express = require("express");
 const fs = require('fs');
 const path = require('path');
-const surveyFormSchema = require("../../models/forms/surveyForm")
-const router = express.Router()
-require("dotenv").config()
-const cpUpload = require("../../utils/uploadFile")
-const { saveBase64Image, convertBase64ToImage } = require("../../utils/functions")
-
+const surveyFormSchema = require("../../models/forms/surveyForm");
+const router = express.Router();
+require("dotenv").config();
+const cpUpload = require("../../utils/uploadFile");
+const { convertBase64ToImage } = require("../../utils/functions");
 
 function extractIndexesFromObjectKeys(obj) {
     const result = {};
@@ -22,12 +21,11 @@ function extractIndexesFromObjectKeys(obj) {
     return result;
 }
 
-
 router.post("/", cpUpload, async (req, res) => {
     try {
         const extractedData = extractIndexesFromObjectKeys(req.files);
 
-        console.log("extractedData---- ", extractedData);
+        // console.log("extractedData---- ", extractedData);
 
         let voterIdImage = "";
         if (req.files.voterIdImage && Array.isArray(req.files.voterIdImage) && req.files.voterIdImage.length > 0) {
@@ -49,7 +47,7 @@ router.post("/", cpUpload, async (req, res) => {
 
         const membersList = JSON.parse(req.body.ageGroupOfMembers);
 
-        console.log("membersList---", membersList);
+        // console.log("membersList---", membersList);
 
         const updatedMembersList = await Promise.all(membersList.map(async (obj, i) => {
             const matchingData = extractedData[i];
@@ -66,7 +64,7 @@ router.post("/", cpUpload, async (req, res) => {
             return obj; // Return the original object if no match is found
         }));
 
-        console.log("updatedMembersList---", updatedMembersList);
+        // console.log("updatedMembersList---", updatedMembersList);
 
         // Parse isParticipated to an array of numbers
         let isParticipated = [];
@@ -82,7 +80,7 @@ router.post("/", cpUpload, async (req, res) => {
             isParticipated
         });
 
-        const data = await newForm.save();
+        await newForm.save();
         res.status(201).json({ status: true, msg: "Successfully Saved" });
     } catch (error) {
         console.log(error);
@@ -93,11 +91,14 @@ router.post("/", cpUpload, async (req, res) => {
 router.put("/:formId", cpUpload, async (req, res) => {
     try {
         const { formId } = req.params;
+
+        const surveyFormData = await surveyFormSchema.findById(formId);
+
         const extractedData = extractIndexesFromObjectKeys(req.files);
 
-        console.log("extractedData---- ", extractedData);
+        // console.log("extractedData---- ", extractedData);
 
-        let voterIdImage = "";
+        let voterIdImage = surveyFormData.voterIdImage;
 
         if (req.files.voterIdImage && Array.isArray(req.files.voterIdImage) && req.files.voterIdImage.length > 0) {
             voterIdImage = req.files.voterIdImage[0].filename;
@@ -107,7 +108,8 @@ router.put("/:formId", cpUpload, async (req, res) => {
             voterIdImage = convertBase64ToImage(base64Image);
         }
 
-        let locationPicture = "";
+        let locationPicture = surveyFormData.locationPicture;
+
         if (req.files.locationPicture && req.files.locationPicture[0]) {
             locationPicture = req.files.locationPicture[0].filename;
         }
@@ -118,7 +120,7 @@ router.put("/:formId", cpUpload, async (req, res) => {
 
         const membersList = await JSON.parse(req.body.ageGroupOfMembers);
 
-        console.log("membersList---", membersList);
+        // console.log("membersList---", membersList);
 
         const updatedMembersList = await Promise.all(membersList.map(async (obj, i) => {
             const matchingData = extractedData[i];
@@ -135,7 +137,7 @@ router.put("/:formId", cpUpload, async (req, res) => {
             return obj; // Return the original object if no match is found
         }));
 
-        console.log("updatedMembersList---", updatedMembersList);
+        // console.log("updatedMembersList---", updatedMembersList);
 
         // Ensure voterIdNumber is a number or null
         if (req.body.voterIdNumber === 'null' || req.body.voterIdNumber === '') {
@@ -155,7 +157,8 @@ router.put("/:formId", cpUpload, async (req, res) => {
             ageGroupOfMembers: updatedMembersList,
             voterIdImage,
             locationPicture,
-            isParticipated
+            isParticipated,
+            filledBy: surveyFormData.filledBy
         });
 
         res.status(201).json({ status: true, msg: "Successfully Updated", data });
