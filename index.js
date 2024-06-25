@@ -12,9 +12,9 @@ const app = express();
 const port = 4000;
 
 // Read SSL certificate files
-// const privateKey = fs.readFileSync('./certs/server.key', 'utf8');
-// const certificate = fs.readFileSync('./certs/server.cert', 'utf8');
-// const credentials = { key: privateKey, cert: certificate };
+const privateKey = fs.readFileSync('./certs/server.key', 'utf8');
+const certificate = fs.readFileSync('./certs/server.cert', 'utf8');
+const credentials = { key: privateKey, cert: certificate };
 
 connectDb();
 
@@ -38,13 +38,13 @@ app.get('/test-cookie', (req, res) => {
 });
 
 // HTTP server
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`)
-})
+// app.listen(port, () => {
+//   console.log(`App listening on port ${port}`)
+// })
 
 // Create HTTPS server
-// const httpsServer = https.createServer(credentials, app);
+const httpsServer = https.createServer(credentials, app);
 
-// httpsServer.listen(port, () => {
-//   console.log(`App listening on port ${port} over HTTPS`);
-// });
+httpsServer.listen(port, () => {
+  console.log(`App listening on port ${port} over HTTPS`);
+});

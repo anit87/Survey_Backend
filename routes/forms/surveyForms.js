@@ -96,8 +96,6 @@ router.put("/:formId", cpUpload, async (req, res) => {
 
         const extractedData = extractIndexesFromObjectKeys(req.files);
 
-        // console.log("extractedData---- ", extractedData);
-
         let voterIdImage = surveyFormData.voterIdImage;
 
         if (req.files.voterIdImage && Array.isArray(req.files.voterIdImage) && req.files.voterIdImage.length > 0) {
@@ -120,8 +118,6 @@ router.put("/:formId", cpUpload, async (req, res) => {
 
         const membersList = await JSON.parse(req.body.ageGroupOfMembers);
 
-        // console.log("membersList---", membersList);
-
         const updatedMembersList = await Promise.all(membersList.map(async (obj, i) => {
             const matchingData = extractedData[i];
             const matchingCapturedData = req.body.voterIdImageMember ? req.body.voterIdImageMember[i] : undefined;
@@ -137,13 +133,9 @@ router.put("/:formId", cpUpload, async (req, res) => {
             return obj; // Return the original object if no match is found
         }));
 
-        // console.log("updatedMembersList---", updatedMembersList);
-
         // Ensure voterIdNumber is a number or null
         if (req.body.voterIdNumber === 'null' || req.body.voterIdNumber === '') {
             req.body.voterIdNumber = null;
-        } else {
-            req.body.voterIdNumber = Number(req.body.voterIdNumber);
         }
 
         // Parse isParticipated to an array of numbers
@@ -169,4 +161,3 @@ router.put("/:formId", cpUpload, async (req, res) => {
 });
 
 module.exports = router;
-
