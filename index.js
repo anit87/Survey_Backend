@@ -45,6 +45,10 @@ app.get('/test-cookie', (req, res) => {
 // Create HTTPS server
 const httpsServer = https.createServer(credentials, app);
 
-httpsServer.listen(port, () => {
-  console.log(`App listening on port ${port} over HTTPS`);
+httpsServer.listen(port, (error) => {
+  if (error) {
+    console.error('Error starting HTTPS server:', error);
+  } else {
+    console.log(`App listening on port ${port} over HTTPS`);
+  }
 });

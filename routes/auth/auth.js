@@ -92,6 +92,38 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
     }
 })
 
+router.post("/createSuperUser", async (req, res) => {
+    try {
+        const { displayName, password, userRole } = req.body;
+        const email = req.body.email.toLowerCase();
+
+        let user = await userSchema.findOne({ email }).select('-password');
+        if (user) {
+            res.json({
+                status: false,
+                msg: "Email already exits",
+                data: user,
+            })
+            return
+        }
+        const saltRounds = 10;
+        const hash = await bcrypt.hash(password, saltRounds);
+
+        const newUser = new userSchema({
+            displayName,
+            email,
+            userRole,
+            password: hash
+        })
+        await newUser.save();
+        res.status(201).json({ status: true, msg: "User Created Successfully" })
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error })
+    }
+})
+
 router.post("/signin", async (req, res) => {
     try {
         const { password } = req.body
