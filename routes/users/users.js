@@ -18,20 +18,26 @@ const getTotalForms = function (userId) {
   });
 };
 
-router.get("/agentslist", async (req, res) => {
+router.get("/agentslist", verifyTokenMiddleware, async (req, res) => {
   try {
-    const data = await userRoleSchema.find({ userRole: '2' })
-    res.json({ data })
+    const { user } = req;
+    const data = await userRoleSchema.find({
+      userRole: '2',
+      creatorId: new mongoose.Types.ObjectId(user.id) // Ensure creatorId matches the logged-in user's ID
+    });
+    res.json({ data });
   } catch (error) {
-    res.status(500).send("error")
+    console.error(error);
+    res.status(500).send("error");
   }
-
-})
+});
 
 router.get("/", verifyTokenMiddleware, async (req, res) => {
   try {
-    if (req.user.userRole === "admin") {
-      console.time('myCode');
+    const { user } = req;
+
+    if (user.userRole === "admin") {
+
       // const allAgents = await userRoleSchema.find({ userRole: '2' })
 
       // Promise.all(
@@ -73,14 +79,13 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
           {
             $match: {
               userRole: "2",
+              creatorId: new mongoose.Types.ObjectId(user.id), // Ensure creatorId matches the logged-in user's ID
             },
           },
           {
             $lookup: {
               from: "userroles",
-              let: {
-                userId: "$_id",
-              },
+              let: { userId: "$_id" },
               pipeline: [
                 {
                   $match: {
@@ -88,13 +93,11 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
                       $and: [
                         {
                           $or: [
-                            { $eq: ["$creatorId", "$$userId",], },
-                            { $eq: ["$reportingAgent", "$$userId",], },
+                            { $eq: ["$creatorId", "$$userId"] },
+                            { $eq: ["$reportingAgent", "$$userId"] },
                           ],
                         },
-                        {
-                          $eq: ["$userRole", "3"],
-                        },
+                        { $eq: ["$userRole", "3"] },
                       ],
                     },
                   },
@@ -121,9 +124,8 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
           },
         ]
       )
-      console.timeEnd('myCode');
 
-      res.json({ status: true, result })
+      res.json({ status: true, result });
     }
     if (req.user.userRole !== "admin") {
       const agents = await userRoleSchema.aggregate([
@@ -159,7 +161,7 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
         },
       ]);
 
-      res.json({ status: true, result: agents })
+      res.json({ status: true, result: agents });
 
       // const users = await userRoleSchema.find({ creatorId: req.user.id })     // all F users
       // Promise.all(
@@ -194,7 +196,7 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error })
+    res.status(500).json({ error });
   }
 })
 
