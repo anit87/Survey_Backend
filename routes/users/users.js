@@ -313,6 +313,7 @@ router.post("/record", async (req, res) => {
 
 router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
   try {
+    const { user } = req;
     const { birthdayDate, isOwnProperty, monthlyHouseholdIncome, maritalStatus, occupationStatus, religion, caste, cweEducation, startDate, endDate } = req.query;
 
     let condition = {};
@@ -347,57 +348,55 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
         $lte: new Date(endDate + 'T23:59:59.999+00:00'),
       };
     }
-    if (req.user.userRole === 'admin') {
-      const allForms = await surveyFormSchema.find(condition).sort({ date: -1 })
+    // Admin: Fetch all surveys filled by agents and sub-agents
+    if (user.userRole === 'admin') {
+      // Fetch all agents created by the admin
+      const allAgents = await userRoleSchema.find({
+        userRole: '2',
+        creatorId: new mongoose.Types.ObjectId(user.id)
+      });
+      const agentIds = allAgents.map(agent => agent._id);
 
-      const allUsers = await userRoleSchema.find()
+      // Fetch sub-agents under each agent
+      const subAgents = await userRoleSchema.find({ reportingAgent: { $in: agentIds }, userRole: '3' });
+      const subAgentIds = subAgents.map(subAgent => subAgent._id);
 
-      const newArr = allForms.map(async (singleForm, i) => {
-        const userInfo = allUsers.find((user) => user._id.toString() === singleForm.filledBy.toString())
-        return { ...singleForm, userInfo }
-      })
-      Promise.all(
-        allForms.map(async (singleForm) => {
-          const userInfo = allUsers.find((user) => user._id.toString() === singleForm.filledBy.toString())
-          return {
-            _id: singleForm._id,
-            respondentName: singleForm.respondentName,
-            pincode: singleForm.pincode,
-            mobileNo: singleForm.mobileNo,
-            maritalStatus: singleForm.maritalStatus,
-            monthlyHouseholdIncome: singleForm.monthlyHouseholdIncome,
-            date: singleForm.date,
-            userInfo
-          }
+      // Combine agent and sub-agent IDs
+      const allIds = [...agentIds, ...subAgentIds];
+
+      // Fetch surveys filled by agents and sub-agents
+      const surveys = await SurveyForm.find({ ...condition, filledBy: { $in: allIds } })
+        .populate({
+          path: 'filledBy',
+          select: 'displayName userRole'
         })
-      ).then(data => res.json({ status: true, data }))
+        .sort({ date: -1 });
 
-    } else if (req.user.userRole == '3') {
-      const data = await surveyFormSchema.find({ filledBy: req.user.id, ...condition }).sort({ date: -1 })
-      res.json({ status: true, data })
-    } else if (req.user.userRole == '2') {
-      const agentForms = await surveyFormSchema.find({ filledBy: req.user.id, ...condition }).sort({ date: -1 })
+      res.json({ status: true, data: surveys });
 
-      const fieldAgents = await userRoleSchema.find({ $or: [{ reportingAgent: req.user.id }, { creatorId: req.user.id }], userRole: { $not: { $eq: "2" } } })
+      // Sub-agent: Fetch all surveys filled by the sub-agent
+    } else if (user.userRole == '3') {
+      const data = await surveyFormSchema.find({ filledBy: user.id, ...condition }).sort({ date: -1 });
+      res.json({ status: true, data });
 
-      let formsOfAllFieldAgent = [...agentForms]
+      // Agent: Fetch all surveys filled by the agent and their sub-agents
+    } else if (user.userRole == '2') {
+      const agentForms = await surveyFormSchema.find({ filledBy: user.id, ...condition }).sort({ date: -1 });
 
-      const fieldAgentForms = await Promise.all(
-        fieldAgents.map(async (fieldUser) => {
-          // const formsFilled1 = await getTotalForms(fieldUser._id)
-          const formsFilled = await surveyFormSchema.find({ filledBy: fieldUser._id, ...condition }).sort({ date: -1 })
-          formsOfAllFieldAgent = [...formsOfAllFieldAgent, ...formsFilled]
-        })
-      )
-      formsOfAllFieldAgent.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const subAgents = await userRoleSchema.find({ reportingAgent: user.id, userRole: '3' });
+      const subAgentIds = subAgents.map(subAgent => subAgent._id);
 
-      res.json({ status: true, data: formsOfAllFieldAgent })
+      const subAgentForms = await surveyFormSchema.find({ filledBy: { $in: subAgentIds }, ...condition }).sort({ date: -1 });
+
+      const formsOfAllFieldAgent = [...agentForms, ...subAgentForms].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      res.json({ status: true, data: formsOfAllFieldAgent });
     }
   } catch (error) {
-    res.status(500).send(error.message)
+    console.log("Error fetching survey records:", error);
+    res.status(500).send(error.message);
   }
-
-})
+});
 
 router.get('/getuser/:id', async (req, res) => {
   const { id } = req.params;
