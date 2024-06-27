@@ -200,13 +200,108 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
   }
 })
 
+// router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
+//   try {
+//     if (req.user.userRole === "admin" || req.user.userRole === "2") {
+//       const agents = await userRoleSchema.aggregate([
+//         {
+//           $match: {
+//             userRole: "2"
+//           }
+//         },
+//         {
+//           $lookup: {
+//             from: "surveyforms",
+//             localField: "_id",
+//             foreignField: "filledBy",
+//             as: "surveys",
+//             pipeline: [
+//               {
+//                 $sort: {
+//                   date: -1
+//                 }
+//               },
+//               {
+//                 $limit: 1
+//               },
+//               {
+//                 $project: {
+//                   date: 1
+//                 }
+//               }
+//             ]
+//           }
+//         },
+//         {
+//           $project: {
+//             displayName: 1,
+//             email: 1,
+//             surveys: 1
+//           }
+//         }
+//       ]);
+//       const fieldAgents = await userRoleSchema.aggregate([
+//         {
+//           $match: {
+//             userRole: "3"
+//           }
+//         },
+//         {
+//           $lookup: {
+//             from: "surveyforms",
+//             localField: "_id",
+//             foreignField: "filledBy",
+//             as: "surveys",
+//             pipeline: [
+//               {
+//                 $sort: {
+//                   date: -1
+//                 }
+//               },
+//               {
+//                 $limit: 1
+//               },
+//               {
+//                 $project: {
+//                   date: 1
+//                 }
+//               }
+
+//             ]
+//           }
+//         },
+//         {
+//           $project: {
+//             displayName: 1,
+//             email: 1,
+//             creatorId: 1,
+//             reportingAgent: 1,
+//             surveys: 1
+//           }
+//         }
+
+//       ]);
+//       res.json({ status: true, result: { agents, fieldAgents } });
+//     } else {
+//       res.json({ status: false, result: { agents: [], fieldAgents: [] } });
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ error });
+//   }
+// });
+
 router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
   try {
-    if (req.user.userRole === "admin" || "2") {
+    const { user } = req;
+
+    if (user.userRole === 'admin') {
+      // Fetch agents created by the admin
       const agents = await userRoleSchema.aggregate([
         {
           $match: {
-            userRole: "2"
+            userRole: "2",
+            creatorId: new mongoose.Types.ObjectId(user.id)
           }
         },
         {
@@ -240,10 +335,13 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
           }
         }
       ]);
+
+      // Fetch sub-agents under each agent
       const fieldAgents = await userRoleSchema.aggregate([
         {
           $match: {
-            userRole: "3"
+            userRole: "3",
+            reportingAgent: { $in: agents.map(agent => agent._id) }
           }
         },
         {
@@ -266,7 +364,6 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
                   date: 1
                 }
               }
-
             ]
           }
         },
@@ -279,17 +376,67 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
             surveys: 1
           }
         }
-
       ]);
+
       res.json({ status: true, result: { agents, fieldAgents } });
+    } else if (user.userRole === '2') {
+      // Fetch the last survey filled by the agent
+      const agentSurveys = await SurveyForm.find({ filledBy: user.id })
+        .sort({ date: -1 })
+        .limit(1)
+        .select('date');
+
+      // Fetch sub-agents under the agent
+      const fieldAgents = await userRoleSchema.aggregate([
+        {
+          $match: {
+            userRole: "3",
+            reportingAgent: new mongoose.Types.ObjectId(user.id)
+          }
+        },
+        {
+          $lookup: {
+            from: "surveyforms",
+            localField: "_id",
+            foreignField: "filledBy",
+            as: "surveys",
+            pipeline: [
+              {
+                $sort: {
+                  date: -1
+                }
+              },
+              {
+                $limit: 1
+              },
+              {
+                $project: {
+                  date: 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          $project: {
+            displayName: 1,
+            email: 1,
+            creatorId: 1,
+            reportingAgent: 1,
+            surveys: 1
+          }
+        }
+      ]);
+
+      res.json({ status: true, result: { agentSurveys, fieldAgents } });
     } else {
-      res.json({ status: false, result: { agents: [], fieldAgents: [] } });
+      res.status(403).json({ status: false, message: 'Unauthorized' });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error });
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 router.post("/records", verifyTokenMiddleware, async (req, res) => {
   try {
@@ -311,6 +458,7 @@ router.post("/record", async (req, res) => {
   }
 })
 
+// Get all surveys based on Admin
 router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
   try {
     const { user } = req;
@@ -365,7 +513,7 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
       const allIds = [...agentIds, ...subAgentIds];
 
       // Fetch surveys filled by agents and sub-agents
-      const surveys = await SurveyForm.find({ ...condition, filledBy: { $in: allIds } })
+      const surveys = await surveyFormSchema.find({ ...condition, filledBy: { $in: allIds } })
         .populate({
           path: 'filledBy',
           select: 'displayName userRole'
