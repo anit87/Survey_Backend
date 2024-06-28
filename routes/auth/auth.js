@@ -26,7 +26,7 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
         const email = req.body.email.toLowerCase();
 
         if (req.user.userRole === '3') {
-            res.json({ status: false, msg: "You are not authorized" })
+            res.json({ status: false, msg: "You are not authorized" });
             return
         }
 
@@ -35,9 +35,9 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
                 displayName,
                 email,
                 phoneNumber
-            })
+            });
 
-            res.status(200).json({ status: true, msg: "Updated Successfully" })
+            res.status(200).json({ status: true, msg: "Updated Successfully" });
             return
         }
 
@@ -47,7 +47,7 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
                 status: false,
                 msg: "Email already exits",
                 data: user,
-            })
+            });
             return
         }
         const saltRounds = 10;
@@ -66,8 +66,8 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
                 wardNumber,
                 constituency
             })
-            await newUser.save()
-            res.status(201).json({ status: true, msg: "User Created Successfully" })
+            await newUser.save();
+            res.status(201).json({ status: true, msg: "User Created Successfully" });
 
         } else {
             const newUser = new userRoleSchema({
@@ -82,13 +82,13 @@ router.post("/signup", verifyTokenMiddleware, async (req, res) => {
                 wardNumber,
                 constituency
             })
-            const data = await newUser.save()
-            res.status(201).json({ status: true, msg: "User Created Successfully" })
+            const data = await newUser.save();
+            res.status(201).json({ status: true, msg: "User Created Successfully" });
         }
 
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error })
+        res.status(500).json({ error });
     }
 })
 
@@ -103,7 +103,7 @@ router.post("/createSuperUser", async (req, res) => {
                 status: false,
                 msg: "Email already exits",
                 data: user,
-            })
+            });
             return
         }
         const saltRounds = 10;
@@ -114,25 +114,25 @@ router.post("/createSuperUser", async (req, res) => {
             email,
             userRole,
             password: hash
-        })
+        });
         await newUser.save();
-        res.status(201).json({ status: true, msg: "User Created Successfully" })
+        res.status(201).json({ status: true, msg: "User Created Successfully" });
 
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error })
+        res.status(500).json({ error });
     }
 })
 
 router.post("/signin", async (req, res) => {
     try {
-        const { password } = req.body
-        const email = req.body.email.toLowerCase()
+        const { password } = req.body;
+        const email = req.body.email.toLowerCase();
 
-        let user = await userSchema.findOne({ email })
+        let user = await userSchema.findOne({ email });
 
         if (!user) {
-            user = await userRoleSchema.findOne({ email })
+            user = await userRoleSchema.findOne({ email });
         }
 
         if (!user) {
@@ -172,7 +172,7 @@ router.post("/signin", async (req, res) => {
 })
 
 router.post("/verifytoken", async (req, res) => {
-    const data = verifyToken(req.body.token, process.env.JWT_SECRET_KEY)
+    const data = verifyToken(req.body.token, process.env.JWT_SECRET_KEY);
     if (data) {
         res.json({
             status: true,
@@ -192,8 +192,8 @@ router.post("/verifytoken", async (req, res) => {
 
 router.post("/resetpassword", async (req, res) => {
     try {
-        const { email } = req.body
-        let user = await userSchema.findOne({ email })
+        const { email } = req.body;
+        let user = await userSchema.findOne({ email });
 
         if (!user) {
             res.json({
@@ -202,12 +202,12 @@ router.post("/resetpassword", async (req, res) => {
             });
             return
         }
-        const resetCode = generateRandomCode()
+        const resetCode = generateRandomCode();
 
-        await sendEmail(email, "Reset Password", resetCode)
-        user = await userSchema.findOneAndUpdate({ email }, { resetCode })
+        await sendEmail(email, "Reset Password", resetCode);
+        user = await userSchema.findOneAndUpdate({ email }, { resetCode });
 
-        res.json({ status: true, msg: "Check Your Email", email: user.email, resetCode })
+        res.json({ status: true, msg: "Check Your Email", email: user.email, resetCode });
 
     } catch (error) {
         console.log(error);
@@ -215,5 +215,4 @@ router.post("/resetpassword", async (req, res) => {
     }
 })
 
-module.exports = router
-
+module.exports = router;

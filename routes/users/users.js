@@ -7,16 +7,15 @@ const verifyTokenMiddleware = require("../../utils/verifyTokenMiddleware");
 const userRoleSchema = require("../../models/auth/userByRole");
 const surveyFormSchema = require("../../models/forms/surveyForm");
 
-const getTotalForms = function (userId) {
-  return new Promise(async function (resolve, reject) {
-    const data = await surveyFormSchema.find({ filledBy: userId }).sort({ date: -1 })
-    if (data) {
-      resolve(data)
-    } else {
-      reject(Error("error"));
-    }
-  });
+const getTotalForms = async function (userId) {
+  try {
+    const data = await surveyFormSchema.find({ filledBy: userId }).sort({ date: -1 });
+    return data;
+  } catch (error) {
+    throw new Error("Error fetching survey forms");
+  }
 };
+
 
 router.get("/agentslist", verifyTokenMiddleware, async (req, res) => {
   try {
@@ -37,42 +36,6 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
     const { user } = req;
 
     if (user.userRole === "admin") {
-
-      // const allAgents = await userRoleSchema.find({ userRole: '2' })
-
-      // Promise.all(
-      //   allAgents.map(async (user, index) => {
-      //     const fieldUsers = await userRoleSchema.find({ $or: [{ reportingAgent: user._id }, { creatorId: user._id }], userRole: { $not: { $eq: "2" } } })
-      //     // const fieldUsers = await userRoleSchema.find({ reportingAgent: user._id  creatorId: user._id })
-
-      //     const userInfo = await Promise.all(
-      //       fieldUsers.map(async (fieldUser) => {
-      //         const formsFilled = await getTotalForms(fieldUser._id)
-      //         return {
-      //           _id: fieldUser._id,
-      //           email: fieldUser.email,
-      //           phoneNumber: fieldUser.phoneNumber,
-      //           displayName: fieldUser.displayName,
-      //           userRole: fieldUser.userRole,
-      //           reportingAgent: fieldUser.reportingAgent || "",
-      //           surveyRecords: formsFilled
-      //         }
-      //       })
-      //     )
-      //     const surveyRecords = await getTotalForms(user._id)
-      //     return {
-      //       _id: user._id,
-      //       displayName: user.displayName,
-      //       email: user.email,
-      //       phoneNumber: user.phoneNumber,
-      //       userRole: user.userRole,
-      //       reportingAgent: user.reportingAgent || "",
-      //       fieldUsers: userInfo,
-      //       surveyRecords
-      //     };
-      //   })
-      // ).then(result => (console.timeEnd('myCode'), res.json({ status: true, result })))
-
 
       const result = await userRoleSchema.aggregate(
         [
@@ -162,37 +125,6 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
       ]);
 
       res.json({ status: true, result: agents });
-
-      // const users = await userRoleSchema.find({ creatorId: req.user.id })     // all F users
-      // Promise.all(
-      //   users.map(async (user, index) => {
-      //     const fieldUsers = await userRoleSchema.find({ creatorId: user._id })
-
-      //     const userInfo = await Promise.all(
-      //       fieldUsers.map(async (fieldUser, i) => {
-      //         const formsFilled = await getTotalForms(fieldUser._id)
-      //         return {
-      //           _id: fieldUser._id,
-      //           email: fieldUser.email,
-      //           displayName: fieldUser.displayName,
-      //           userRole: fieldUser.userRole,
-      //           phoneNumber: fieldUser.phoneNumber,
-      //           surveyRecords: formsFilled
-      //         }
-      //       })
-      //     )
-      //     const surveyRecords = await getTotalForms(user._id)
-
-      //     return {
-      //       _id: user._id,
-      //       displayName: user.displayName,
-      //       email: user.email,
-      //       userRole: user.userRole,
-      //       fieldUsers: userInfo,
-      //       surveyRecords
-      //     };
-      //   })
-      // ).then(result => res.json({ status: true, result }))
     }
   } catch (error) {
     console.log(error);
@@ -438,16 +370,16 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
   }
 });
 
+// Get all surveys of a user 
 router.post("/records", verifyTokenMiddleware, async (req, res) => {
   try {
     const data = await getTotalForms(req.body.id);
-    const user = await userRoleSchema.findById(req.body.id).select("-password");
+    const user = await userRoleSchema.findById(req.body.id).select(["_id", "displayName"]);
     res.json({ data, user });
   } catch (error) {
     res.status(500).send("error");
   }
 })
-
 
 router.post("/record", async (req, res) => {
   try {
@@ -549,11 +481,11 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
 router.get('/getuser/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const data = await userRoleSchema.findById(id).select('-password')
-    res.json({ status: true, data })
+    const data = await userRoleSchema.findById(id).select('-password');
+    res.json({ status: true, data });
   } catch (error) {
-    res.status(500).send("error")
+    res.status(500).send("error");
   }
 })
 
-module.exports = router
+module.exports = router;
