@@ -402,7 +402,7 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
       condition.birthdayDate = parseInt(birthdayDate);
     }
     if (isOwnProperty) {
-      condition.isOwnProperty = isOwnProperty === 'true' ? 1 : 0;
+      condition.isOwnProperty = isOwnProperty;
     }
     if (monthlyHouseholdIncome) {
       condition.monthlyHouseholdIncome = parseInt(monthlyHouseholdIncome);
