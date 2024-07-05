@@ -41,8 +41,7 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
         [
           {
             $match: {
-              userRole: "2",
-              creatorId: new mongoose.Types.ObjectId(user.id), // Ensure creatorId matches the logged-in user's ID
+              userRole: "2"
             },
           },
           {
@@ -432,8 +431,7 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
     if (user.userRole === 'admin') {
       // Fetch all agents created by the admin
       const allAgents = await userRoleSchema.find({
-        userRole: '2',
-        creatorId: new mongoose.Types.ObjectId(user.id)
+        userRole: '2'
       });
       const agentIds = allAgents.map(agent => agent._id);
 
