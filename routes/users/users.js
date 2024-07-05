@@ -22,7 +22,7 @@ router.get("/agentslist", verifyTokenMiddleware, async (req, res) => {
     const { user } = req;
     const data = await userRoleSchema.find({
       userRole: '2',
-      creatorId: new mongoose.Types.ObjectId(user.id) // Ensure creatorId matches the logged-in user's ID
+      // creatorId: new mongoose.Types.ObjectId(user.id) // Ensure creatorId matches the logged-in user's ID
     });
     res.json({ data });
   } catch (error) {
