@@ -111,6 +111,18 @@ const surveyFormSchema = new Schema({
         type: Date,
         default: Date.now,
     },
+    votedLastElection: {
+        type: Number,
+        required: false,
+    },
+    dateOfBirth: {
+        type: Date,
+        required: false,
+    },
+    weddingDate: {
+        type: Date,
+        required: false,
+    },
 });
 
 const SurveyForm = mongoose.model('SurveyForm', surveyFormSchema);
