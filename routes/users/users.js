@@ -84,6 +84,11 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
               as: "surveyRecords",
             },
           },
+          {
+            $sort: {
+              displayName: 1,
+            },
+          },
         ]
       )
 
@@ -121,6 +126,11 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
             fieldUsers: [],
           },
         },
+        {
+          $sort: {
+            displayName: 1,
+          },
+        },
       ]);
 
       res.json({ status: true, result: agents });
@@ -130,97 +140,6 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
     res.status(500).json({ error });
   }
 })
-
-// router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
-//   try {
-//     if (req.user.userRole === "admin" || req.user.userRole === "2") {
-//       const agents = await userRoleSchema.aggregate([
-//         {
-//           $match: {
-//             userRole: "2"
-//           }
-//         },
-//         {
-//           $lookup: {
-//             from: "surveyforms",
-//             localField: "_id",
-//             foreignField: "filledBy",
-//             as: "surveys",
-//             pipeline: [
-//               {
-//                 $sort: {
-//                   date: -1
-//                 }
-//               },
-//               {
-//                 $limit: 1
-//               },
-//               {
-//                 $project: {
-//                   date: 1
-//                 }
-//               }
-//             ]
-//           }
-//         },
-//         {
-//           $project: {
-//             displayName: 1,
-//             email: 1,
-//             surveys: 1
-//           }
-//         }
-//       ]);
-//       const fieldAgents = await userRoleSchema.aggregate([
-//         {
-//           $match: {
-//             userRole: "3"
-//           }
-//         },
-//         {
-//           $lookup: {
-//             from: "surveyforms",
-//             localField: "_id",
-//             foreignField: "filledBy",
-//             as: "surveys",
-//             pipeline: [
-//               {
-//                 $sort: {
-//                   date: -1
-//                 }
-//               },
-//               {
-//                 $limit: 1
-//               },
-//               {
-//                 $project: {
-//                   date: 1
-//                 }
-//               }
-
-//             ]
-//           }
-//         },
-//         {
-//           $project: {
-//             displayName: 1,
-//             email: 1,
-//             creatorId: 1,
-//             reportingAgent: 1,
-//             surveys: 1
-//           }
-//         }
-
-//       ]);
-//       res.json({ status: true, result: { agents, fieldAgents } });
-//     } else {
-//       res.json({ status: false, result: { agents: [], fieldAgents: [] } });
-//     }
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ error });
-//   }
-// });
 
 router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
   try {
@@ -232,7 +151,7 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
         {
           $match: {
             userRole: "2",
-            creatorId: new mongoose.Types.ObjectId(user.id)
+            // creatorId: new mongoose.Types.ObjectId(user.id)
           }
         },
         {
