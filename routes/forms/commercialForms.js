@@ -35,5 +35,22 @@ router.post("/", verifyTokenMiddleware, async (req, res) => {
     }
 });
 
+router.get("/", verifyTokenMiddleware, async (req, res) => {
+    try {
+        const { user } = req;
+        let data = null;
+
+        if (user.userRole === 'admin') {
+            data = await CommercialForm.find();
+        } else {
+            data = await CommercialForm.find({ filledBy: new mongoose.Types.ObjectId(user.id) });
+        }
+        res.status(201).json({ status: true, data });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 
 module.exports = router;
