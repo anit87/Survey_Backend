@@ -5,6 +5,7 @@ const https = require('https');
 const cookieParser = require('cookie-parser');
 const connectDb = require('./utils/db');
 const formsRouter = require('./routes/forms/surveyForms');
+const commercialFormsRouter = require('./routes/forms/commercialForms');
 const authRouter = require('./routes/auth/auth');
 const usersRouter = require('./routes/users/users');
 
@@ -26,6 +27,7 @@ app.use('/uploads', express.static('public'));
 
 app.use("/auth", authRouter);
 app.use("/forms", formsRouter);
+app.use("/commercial", commercialFormsRouter);
 app.use("/users", usersRouter);
 
 app.get('/', (req, res) => {

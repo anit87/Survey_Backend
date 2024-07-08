@@ -2,7 +2,6 @@ const express = require("express");
 const fs = require('fs');
 const path = require('path');
 const surveyFormSchema = require("../../models/forms/surveyForm");
-const CommercialForm = require("../../models/forms/commercialForm");
 const router = express.Router();
 require("dotenv").config();
 const cpUpload = require("../../utils/uploadFile");
@@ -160,33 +159,5 @@ router.put("/:formId", cpUpload, async (req, res) => {
         res.status(500).json({ error });
     }
 });
-
-router.post("/commercial", async (req, res) => {
-    try {
-        const { formId } = req.body;
-
-        if (formId) {
-            // Update the existing form
-            const data = await CommercialForm.findByIdAndUpdate(
-                formId,
-                { ...req.body },
-                { new: true }
-            );
-            if (!data) {
-                return res.status(404).json({ status: false, msg: "Form not found" });
-            }
-        } else {
-            // Create a new form
-            const newForm = new CommercialForm({ ...req.body });
-            await newForm.save();
-        }
-
-        res.status(201).json({ status: true, msg: "Successfully Saved" });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
 
 module.exports = router;
