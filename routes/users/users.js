@@ -231,7 +231,7 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
       res.json({ status: true, result: { agents, fieldAgents } });
     } else if (user.userRole === '2') {
       // Fetch the last survey filled by the agent
-      const agentSurveys = await SurveyForm.find({ filledBy: user.id })
+      const agentSurveys = await surveyFormSchema.find({ filledBy: user.id })
         .sort({ date: -1 })
         .limit(1)
         .select('date');
