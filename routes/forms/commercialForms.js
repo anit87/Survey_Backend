@@ -2,6 +2,7 @@ const express = require("express");
 const fs = require('fs');
 const path = require('path');
 const CommercialForm = require("../../models/forms/commercialForm");
+const UserRole = require("../../models/auth/userByRole");
 const router = express.Router();
 require("dotenv").config();
 const verifyTokenMiddleware = require('../../utils/verifyTokenMiddleware')
@@ -41,7 +42,23 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
         let data = null;
 
         if (user.userRole === 'admin') {
-            data = await CommercialForm.find();
+            data = await CommercialForm.find()
+                .populate({
+                    path: 'filledBy',
+                    select: 'displayName userRole'
+                })
+                .sort({ date: -1 });
+        } else if (user.userRole == '2') {
+            const agentForms = await CommercialForm.find({ filledBy: user.id }).sort({ date: -1 });
+
+            const subAgents = await UserRole.find({ reportingAgent: user.id, userRole: '3' });
+            const subAgentIds = subAgents.map(subAgent => subAgent._id);
+
+            const subAgentForms = await CommercialForm.find({ filledBy: { $in: subAgentIds }}).sort({ date: -1 });
+
+            const formsOfAllFieldAgent = [...agentForms, ...subAgentForms].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            res.json({ status: true, data: formsOfAllFieldAgent });
         } else {
             data = await CommercialForm.find({ filledBy: new mongoose.Types.ObjectId(user.id) });
         }
