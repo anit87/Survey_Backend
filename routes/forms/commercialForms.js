@@ -36,6 +36,7 @@ router.post("/", verifyTokenMiddleware, async (req, res) => {
     }
 });
 
+// Get all surveys based on Admin
 router.get("/", verifyTokenMiddleware, async (req, res) => {
     try {
         const { user } = req;
@@ -54,11 +55,9 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
             const subAgents = await UserRole.find({ reportingAgent: user.id, userRole: '3' });
             const subAgentIds = subAgents.map(subAgent => subAgent._id);
 
-            const subAgentForms = await CommercialForm.find({ filledBy: { $in: subAgentIds }}).sort({ date: -1 });
+            const subAgentForms = await CommercialForm.find({ filledBy: { $in: subAgentIds } }).sort({ date: -1 });
 
-            const formsOfAllFieldAgent = [...agentForms, ...subAgentForms].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            res.json({ status: true, data: formsOfAllFieldAgent });
+            data = [...agentForms, ...subAgentForms].sort((a, b) => new Date(b.date) - new Date(a.date));
         } else {
             data = await CommercialForm.find({ filledBy: new mongoose.Types.ObjectId(user.id) });
         }
@@ -66,6 +65,32 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all surveys based on userId
+router.post("/filledbyuser", verifyTokenMiddleware, async (req, res) => {
+    try {
+        const data = await CommercialForm.find({ filledBy: req.body.id }).sort({ date: -1 });
+
+        const user = await UserRole.findById(req.body.id).select(["_id", "displayName"]);
+        res.json({ data, user });
+    } catch (error) {
+        res.status(500).send("error");
+    }
+})
+
+//Get Single form
+router.post("/getForm", async (req, res) => {
+    try {
+        const data = await CommercialForm.findById(req.body.id).sort({ date: -1 });
+        if (!data) {
+            return res.status(404).json({ error: "Form not found" });
+        }
+        res.json({ status: true, data });
+    } catch (error) {
+        console.error("Error fetching form:", error);
+        res.status(500).json({ status: false, error: error.message });
     }
 });
 

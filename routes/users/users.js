@@ -288,7 +288,7 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
   }
 });
 
-// Get all surveys of a user 
+// Get all surveys of a user
 router.post("/records", verifyTokenMiddleware, async (req, res) => {
   try {
     const data = await getTotalForms(req.body.id);
