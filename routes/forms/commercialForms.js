@@ -41,7 +41,7 @@ router.post("/", verifyTokenMiddleware, async (req, res) => {
         res.status(201).json({ status: true, msg: "Successfully Saved" });
     } catch (error) {
         console.log(error);
-        res.status(500).json({ status: false, message: "An error occurred while saving the form", error: error.message });
+        res.status(500).json({ status: false, msg: "An error occurred while saving the form", error: error.message });
     }
 });
 
