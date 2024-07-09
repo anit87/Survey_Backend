@@ -15,15 +15,23 @@ router.post("/", verifyTokenMiddleware, async (req, res) => {
         const { formId } = req.body;
 
         if (formId) {
-            // Update the existing form
-            const data = await CommercialForm.findByIdAndUpdate(
-                formId,
-                { ...req.body},
-                { new: true }
-            );
+            // Check if formId is a valid ObjectId
+            if (!mongoose.Types.ObjectId.isValid(formId)) {
+                return res.status(400).json({ status: false, msg: "Invalid form ID" });
+            }
+
+            const data = await CommercialForm.findById(formId);
+
             if (!data) {
                 return res.status(404).json({ status: false, msg: "Form not found" });
             }
+
+            // Update the existing form
+            await CommercialForm.findByIdAndUpdate(
+                formId,
+                { ...req.body },
+                { new: true }
+            );
         } else {
             // Create a new form
             const newForm = new CommercialForm({ ...req.body, filledBy: user.id });
@@ -33,7 +41,7 @@ router.post("/", verifyTokenMiddleware, async (req, res) => {
         res.status(201).json({ status: true, msg: "Successfully Saved" });
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ status: false, message: "An error occurred while saving the form", error: error.message });
     }
 });
 
