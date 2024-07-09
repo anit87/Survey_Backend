@@ -18,7 +18,7 @@ router.post("/", verifyTokenMiddleware, async (req, res) => {
             // Update the existing form
             const data = await CommercialForm.findByIdAndUpdate(
                 formId,
-                { ...req.body, filledBy: user.id },
+                { ...req.body},
                 { new: true }
             );
             if (!data) {
