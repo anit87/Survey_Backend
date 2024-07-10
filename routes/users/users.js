@@ -171,6 +171,25 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
               },
               {
                 $project: {
+                  respondentName: 1,
+                  date: 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          $lookup: {
+            from: "commercialforms",
+            localField: "_id",
+            foreignField: "filledBy",
+            as: "lastCommercial",
+            pipeline: [
+              { $sort: { date: -1 } },
+              { $limit: 1 },
+              {
+                $project: {
+                  establishmentName: 1,
                   date: 1
                 }
               }
@@ -181,7 +200,8 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
           $project: {
             displayName: 1,
             email: 1,
-            surveys: 1
+            surveys: 1,
+            lastCommercial: 1
           }
         }
       ]);
@@ -211,6 +231,31 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
               },
               {
                 $project: {
+                  respondentName: 1,
+                  date: 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          $lookup: {
+            from: "commercialforms",
+            localField: "_id",
+            foreignField: "filledBy",
+            as: "lastCommercial",
+            pipeline: [
+              {
+                $sort: {
+                  date: -1
+                }
+              },
+              {
+                $limit: 1
+              },
+              {
+                $project: {
+                  establishmentName: 1,
                   date: 1
                 }
               }
@@ -223,7 +268,8 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
             email: 1,
             creatorId: 1,
             reportingAgent: 1,
-            surveys: 1
+            surveys: 1,
+            lastCommercial: 1
           }
         }
       ]);
@@ -261,6 +307,31 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
               },
               {
                 $project: {
+                  respondentName: 1,
+                  date: 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          $lookup: {
+            from: "commercialforms",
+            localField: "_id",
+            foreignField: "filledBy",
+            as: "lastCommercial",
+            pipeline: [
+              {
+                $sort: {
+                  date: -1
+                }
+              },
+              {
+                $limit: 1
+              },
+              {
+                $project: {
+                  establishmentName: 1,
                   date: 1
                 }
               }
@@ -273,7 +344,8 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
             email: 1,
             creatorId: 1,
             reportingAgent: 1,
-            surveys: 1
+            surveys: 1,
+            lastCommercial: 1
           }
         }
       ]);
@@ -283,8 +355,8 @@ router.get("/getlastform", verifyTokenMiddleware, async (req, res) => {
       res.status(403).json({ status: false, message: 'Unauthorized' });
     }
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ status: false, error: error.message });
   }
 });
 
