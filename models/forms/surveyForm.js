@@ -123,6 +123,22 @@ const surveyFormSchema = new Schema({
         type: Date,
         required: false,
     },
+    isCelebrities: {
+        type: String,
+        required: false,
+    },
+    boothNumber: {
+        type: String,
+        required: false,
+    },
+    constituency: {
+        type: String,
+        required: false,
+    },
+    wardNumber: {
+        type: String,
+        required: false,
+    },
 });
 
 const SurveyForm = mongoose.model('SurveyForm', surveyFormSchema);

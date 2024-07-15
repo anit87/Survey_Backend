@@ -27,6 +27,10 @@ const commercialFormSchema = new Schema({
         type: String,
         required: false
     },
+    contactNumber: {
+        type: Number,
+        required: false
+    },
     date: {
         type: Date,
         default: Date.now
