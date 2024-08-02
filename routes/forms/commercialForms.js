@@ -46,10 +46,16 @@ router.post("/", verifyTokenMiddleware, async (req, res) => {
 });
 
 // Get all surveys based on Admin
-router.get("/", verifyTokenMiddleware, async (req, res) => {
+router.post("/allrecords", verifyTokenMiddleware, async (req, res) => {
     try {
         const { user } = req;
         let data = null;
+        let totalRecords = null;
+
+        const limitParsed = parseInt(req.body.limit, 10) || 10;
+        const pageParsed = parseInt(req.body.page, 10) || 1;
+        const skip = (pageParsed - 1) * limitParsed;
+
 
         if (user.userRole === 'admin') {
             data = await CommercialForm.find()
@@ -57,20 +63,38 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
                     path: 'filledBy',
                     select: 'displayName userRole'
                 })
-                .sort({ date: -1 });
-        } else if (user.userRole == '2') {
-            const agentForms = await CommercialForm.find({ filledBy: user.id }).sort({ date: -1 });
+                .sort({ date: -1 })
+                .skip(skip)
+                .limit(limitParsed);
+            totalRecords = await CommercialForm.countDocuments();
 
+        } else if (user.userRole == '2') {
             const subAgents = await UserRole.find({ reportingAgent: user.id, userRole: '3' });
             const subAgentIds = subAgents.map(subAgent => subAgent._id);
+            const allIds = [...subAgentIds, user.id];
 
-            const subAgentForms = await CommercialForm.find({ filledBy: { $in: subAgentIds } }).sort({ date: -1 });
+            data = await CommercialForm.find({ filledBy: { $in: allIds } })
+                .sort({ date: -1 })
+                .skip(skip)
+                .limit(limitParsed);
 
-            data = [...agentForms, ...subAgentForms].sort((a, b) => new Date(b.date) - new Date(a.date));
+            totalRecords = await surveyFormSchema.countDocuments({ filledBy: { $in: allIds } });
+
         } else {
-            data = await CommercialForm.find({ filledBy: new mongoose.Types.ObjectId(user.id) });
+            data = await CommercialForm.find({ filledBy: new mongoose.Types.ObjectId(user.id) })
+                .sort({ date: -1 })
+                .skip(skip)
+                .limit(limitParsed);
+            totalRecords = await CommercialForm.countDocuments({ filledBy: new mongoose.Types.ObjectId(user.id) });
         }
-        res.status(201).json({ status: true, data });
+
+        res.status(201).json({
+            status: true,
+            data,
+            totalRecords,
+            totalPages: Math.ceil(totalRecords / limitParsed),
+            currentPage: pageParsed
+        });
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: error.message });

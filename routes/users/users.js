@@ -381,7 +381,7 @@ router.post("/record", async (req, res) => {
 })
 
 // Get all surveys based on Admin
-router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
+router.post("/allrecords", verifyTokenMiddleware, async (req, res) => {
   try {
     const { user } = req;
     const { birthdayDate, isOwnProperty, monthlyHouseholdIncome, maritalStatus, occupationStatus, religion, caste, cweEducation, startDate, endDate } = req.query;
@@ -389,28 +389,28 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
     let condition = {};
 
     if (birthdayDate) {
-      condition.birthdayDate = parseInt(birthdayDate);
+      condition.birthdayDate = parseInt(birthdayDate, 10);
     }
     if (isOwnProperty) {
       condition.isOwnProperty = isOwnProperty;
     }
     if (monthlyHouseholdIncome) {
-      condition.monthlyHouseholdIncome = parseInt(monthlyHouseholdIncome);
+      condition.monthlyHouseholdIncome = parseInt(monthlyHouseholdIncome, 10);
     }
     if (maritalStatus) {
-      condition.maritalStatus = parseInt(maritalStatus);
+      condition.maritalStatus = parseInt(maritalStatus, 10);
     }
     if (occupationStatus) {
-      condition.occupationStatus = parseInt(occupationStatus);
+      condition.occupationStatus = parseInt(occupationStatus, 10);
     }
     if (religion) {
-      condition.religion = parseInt(religion);
+      condition.religion = parseInt(religion, 10);
     }
     if (caste) {
-      condition.caste = parseInt(caste);
+      condition.caste = parseInt(caste, 10);
     }
     if (cweEducation) {
-      condition.cweEducation = parseInt(cweEducation);
+      condition.cweEducation = parseInt(cweEducation, 10);
     }
     if (startDate && endDate) {
       condition.date = {
@@ -418,49 +418,58 @@ router.get("/allrecords", verifyTokenMiddleware, async (req, res) => {
         $lte: new Date(endDate + 'T23:59:59.999+00:00'),
       };
     }
+
+    const limitParsed = parseInt(req.body.limit, 10) || 10;
+    const pageParsed = parseInt(req.body.page, 10) || 1;
+    const skip = (pageParsed - 1) * limitParsed;
+
+    let surveys = null;
+    let totalRecords = null;
+
     // Admin: Fetch all surveys filled by agents and sub-agents
     if (user.userRole === 'admin') {
-      // Fetch all agents created by the admin
-      const allAgents = await userRoleSchema.find({
-        userRole: '2'
-      });
-      const agentIds = allAgents.map(agent => agent._id);
-
-      // Fetch sub-agents under each agent
-      const subAgents = await userRoleSchema.find({ reportingAgent: { $in: agentIds }, userRole: '3' });
-      const subAgentIds = subAgents.map(subAgent => subAgent._id);
-
-      // Combine agent and sub-agent IDs
-      const allIds = [...agentIds, ...subAgentIds];
-
-      // Fetch surveys filled by agents and sub-agents
-      const surveys = await surveyFormSchema.find({ ...condition, filledBy: { $in: allIds } })
+      surveys = await surveyFormSchema.find(condition)
         .populate({
           path: 'filledBy',
           select: 'displayName userRole'
         })
-        .sort({ date: -1 });
+        .select(['_id', 'mobileNo', 'respondentName', 'pincode', 'maritalStatus', 'date'])
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limitParsed);
 
-      res.json({ status: true, data: surveys });
+      totalRecords = await surveyFormSchema.countDocuments(condition);
 
       // Sub-agent: Fetch all surveys filled by the sub-agent
-    } else if (user.userRole == '3') {
-      const data = await surveyFormSchema.find({ filledBy: user.id, ...condition }).sort({ date: -1 });
-      res.json({ status: true, data });
+    } else if (user.userRole === '3') {
+      surveys = await surveyFormSchema.find({ filledBy: user.id, ...condition })
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limitParsed);
+
+      totalRecords = await surveyFormSchema.countDocuments({ filledBy: user.id, ...condition });
 
       // Agent: Fetch all surveys filled by the agent and their sub-agents
-    } else if (user.userRole == '2') {
-      const agentForms = await surveyFormSchema.find({ filledBy: user.id, ...condition }).sort({ date: -1 });
-
+    } else if (user.userRole === '2') {
       const subAgents = await userRoleSchema.find({ reportingAgent: user.id, userRole: '3' });
       const subAgentIds = subAgents.map(subAgent => subAgent._id);
+      const allIds = [...subAgentIds, user.id];
 
-      const subAgentForms = await surveyFormSchema.find({ filledBy: { $in: subAgentIds }, ...condition }).sort({ date: -1 });
-
-      const formsOfAllFieldAgent = [...agentForms, ...subAgentForms].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-      res.json({ status: true, data: formsOfAllFieldAgent });
+      surveys = await surveyFormSchema.find({ filledBy: { $in: allIds }, ...condition })
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limitParsed);
+        
+      totalRecords = await surveyFormSchema.countDocuments({ filledBy: { $in: allIds }, ...condition });
     }
+
+    res.json({
+      status: true,
+      data: surveys,
+      totalRecords,
+      totalPages: Math.ceil(totalRecords / limitParsed),
+      currentPage: pageParsed
+    });
   } catch (error) {
     console.log("Error fetching survey records:", error);
     res.status(500).send(error.message);
