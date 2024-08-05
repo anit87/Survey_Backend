@@ -93,25 +93,28 @@ router.put("/:formId", cpUpload, async (req, res) => {
         const { formId } = req.params;
 
         const surveyFormData = await surveyFormSchema.findById(formId);
+        if (!surveyFormData) {
+            return res.status(404).json({ status: false, msg: "Survey form not found" });
+        }
 
         const extractedData = extractIndexesFromObjectKeys(req.files);
 
         let voterIdImage = surveyFormData.voterIdImage;
 
-        if (req.files.voterIdImage && Array.isArray(req.files.voterIdImage) && req.files.voterIdImage.length > 0) {
+        if (req.files.voterIdImage && Array.isArray(req.files.voterIdImage) && req.files.voterIdImage.length > 0) {  // if voterImage is uploaded
             voterIdImage = req.files.voterIdImage[0].filename;
         }
-        if (req.body.voterIdImagee && req.body.voterIdImagee !== 'null' && req.body.voterIdImagee !== null) {
+        if (req.body.voterIdImagee && req.body.voterIdImagee !== 'null' && req.body.voterIdImagee !== null) { // if voterImage is captured
             const base64Image = req.body.voterIdImagee;
             voterIdImage = convertBase64ToImage(base64Image);
         }
 
         let locationPicture = surveyFormData.locationPicture;
 
-        if (req.files.locationPicture && req.files.locationPicture[0]) {
+        if (req.files.locationPicture && Array.isArray(req.files.locationPicture) && req.files.locationPicture.length > 0) {
             locationPicture = req.files.locationPicture[0].filename;
         }
-        if (req.body.locationPicturee) {
+        if (req.body.locationPicturee && req.body.locationPicturee !== 'null') {
             const base64Image = req.body.locationPicturee;
             locationPicture = convertBase64ToImage(base64Image);
         }
@@ -134,7 +137,7 @@ router.put("/:formId", cpUpload, async (req, res) => {
         }));
 
         // Ensure voterIdNumber is a number or null
-        if (req.body.voterIdNumber === 'null' || req.body.voterIdNumber === '') {
+        if (!req.body.voterIdNumber || req.body.voterIdNumber === 'null') {
             req.body.voterIdNumber = null;
         }
 
@@ -144,6 +147,14 @@ router.put("/:formId", cpUpload, async (req, res) => {
             isParticipated = JSON.parse(req.body.isParticipated).map(Number);
         }
 
+        // Handle dateOfBirth to avoid CastError
+        if (req.body.dateOfBirth === 'undefined' || req.body.dateOfBirth === 'null' || !req.body.dateOfBirth) {
+            req.body.dateOfBirth = null;
+        }
+        if (req.body.weddingDate === 'undefined' || req.body.weddingDate === 'null' || !req.body.weddingDate) {
+            req.body.weddingDate = null;
+        }
+
         const data = await surveyFormSchema.findByIdAndUpdate(formId, {
             ...req.body,
             ageGroupOfMembers: updatedMembersList,
@@ -151,12 +162,14 @@ router.put("/:formId", cpUpload, async (req, res) => {
             locationPicture,
             isParticipated,
             filledBy: surveyFormData.filledBy
-        });
+        },
+            { new: true }
+        );
 
-        res.status(201).json({ status: true, msg: "Successfully Updated", data });
+        res.status(200).json({ status: true, msg: "Successfully Updated", data });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ error });
+        console.error(error);
+        res.status(500).json({ status: false, error: error.message });
     }
 });
 
