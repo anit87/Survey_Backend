@@ -64,24 +64,8 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
                     },
                   },
                 },
-                {
-                  $lookup: {
-                    from: "surveyforms",
-                    localField: "_id",
-                    foreignField: "filledBy",
-                    as: "surveyRecords",
-                  },
-                },
               ],
               as: "fieldUsers",
-            },
-          },
-          {
-            $lookup: {
-              from: "surveyforms",
-              localField: "_id",
-              foreignField: "filledBy",
-              as: "surveyRecords",
             },
           },
           {
@@ -92,9 +76,10 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
         ]
       )
 
-      res.json({ status: true, result });
+      return res.json({ status: true, result });
     }
-    if (req.user.userRole !== "admin") {
+    if (req.user.userRole === '2') {
+
       const agents = await userRoleSchema.aggregate([
         {
           $match: {
@@ -114,14 +99,6 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
           },
         },
         {
-          $lookup: {
-            from: "surveyforms",
-            localField: "_id",
-            foreignField: "filledBy",
-            as: "surveyRecords",
-          },
-        },
-        {
           $addFields: {
             fieldUsers: [],
           },
@@ -133,7 +110,9 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
         },
       ]);
 
-      res.json({ status: true, result: agents });
+      return res.json({ status: true, result: agents });
+    } else {
+      return res.status(401).json({ status: false, result: [] });
     }
   } catch (error) {
     console.log(error);
@@ -459,7 +438,7 @@ router.post("/allrecords", verifyTokenMiddleware, async (req, res) => {
         .sort({ date: -1 })
         .skip(skip)
         .limit(limitParsed);
-        
+
       totalRecords = await surveyFormSchema.countDocuments({ filledBy: { $in: allIds }, ...condition });
     }
 
