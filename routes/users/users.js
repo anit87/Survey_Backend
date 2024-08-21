@@ -64,9 +64,26 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
                     },
                   },
                 },
+                {
+                  $project: {
+                    displayName: 1,
+                    email: 1,
+                    phoneNumber: 1,
+                    userRole: 1
+                  }
+                },
               ],
               as: "fieldUsers",
             },
+          },
+          {
+            $project: {
+              displayName: 1,
+              email: 1,
+              phoneNumber: 1,
+              userRole: 1,
+              fieldUsers: 1
+            }
           },
           {
             $sort: {
@@ -97,6 +114,14 @@ router.get("/", verifyTokenMiddleware, async (req, res) => {
               },
             ],
           },
+        },
+        {
+          $project: {
+            displayName: 1,
+            email: 1,
+            phoneNumber: 1,
+            userRole: 1
+          }
         },
         {
           $addFields: {
