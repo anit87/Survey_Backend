@@ -388,7 +388,17 @@ router.post("/record", async (req, res) => {
 router.post("/allrecords", verifyTokenMiddleware, async (req, res) => {
   try {
     const { user } = req;
-    const { birthdayDate, isOwnProperty, monthlyHouseholdIncome, maritalStatus, occupationStatus, religion, caste, cweEducation, startDate, endDate } = req.query;
+    const {
+      birthdayDate,
+      cweEducation, constituency, categoryFallUnder,
+      monthlyHouseholdIncome, maritalStatus,
+      occupationStatus,
+      religion, caste,
+      startDate, endDate,
+      isOwnProperty, isParticipated,
+      pincode, boothNumber, wardNumber,
+      votedLastElection,
+    } = req.query;
 
     let condition = {};
 
@@ -415,6 +425,27 @@ router.post("/allrecords", verifyTokenMiddleware, async (req, res) => {
     }
     if (cweEducation) {
       condition.cweEducation = parseInt(cweEducation, 10);
+    }
+    if (pincode) {
+      condition.pincode = pincode;
+    }
+    if (boothNumber) {
+      condition.boothNumber = boothNumber;
+    }
+    if (wardNumber) {
+      condition.wardNumber = wardNumber;
+    }
+    if (constituency) {
+      condition.constituency = parseInt(constituency, 10);
+    }
+    if (categoryFallUnder) {
+      condition.categoryFallUnder = parseInt(categoryFallUnder, 10);
+    }
+    if (isParticipated) {
+      condition.isParticipated = parseInt(isParticipated, 10);
+    }
+    if (votedLastElection) {
+      condition.votedLastElection = parseInt(votedLastElection, 10);
     }
     if (startDate && endDate) {
       condition.date = {

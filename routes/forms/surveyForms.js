@@ -51,7 +51,7 @@ router.post("/", cpUpload, async (req, res) => {
 
         const updatedMembersList = await Promise.all(membersList.map(async (obj, i) => {
             const matchingData = extractedData[i];
-            const matchingCapturedData = req.body.voterIdImageMember ? req.body.voterIdImageMember[i] : undefined;
+            const matchingCapturedData = req.body.voterIdImageMember.length > 0 ? req.body.voterIdImageMember[i] : undefined;
 
             if (matchingData && matchingData[0]) {
                 return { ...obj, voterIdImg: matchingData[0].filename };
@@ -123,7 +123,7 @@ router.put("/:formId", cpUpload, async (req, res) => {
 
         const updatedMembersList = await Promise.all(membersList.map(async (obj, i) => {
             const matchingData = extractedData[i];
-            const matchingCapturedData = req.body.voterIdImageMember ? req.body.voterIdImageMember[i] : undefined;
+            const matchingCapturedData = req.body.voterIdImageMember.length > 0 ? req.body.voterIdImageMember[i] : undefined;
 
             if (matchingData && matchingData[0]) {
                 return { ...obj, voterIdImg: matchingData[0].filename };
